@@ -1,6 +1,6 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Building2, ChevronDown, Loader2, Search, ShieldCheck } from "lucide-react";
+import { ChevronDown, Loader2, Search } from "lucide-react";
 import { ProviderLogo } from "@/components/icons/providers/ProviderLogo";
 import { hubCopy } from "@/lib/kyc/hub-copy";
 import { cn } from "@/lib/utils";
