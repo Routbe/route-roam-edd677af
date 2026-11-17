@@ -61,6 +61,7 @@ export async function withAuthFallback<T>(
 /** Message for any thrown auth failure, timeout included. */
 export function authFailureMessage(error: unknown, fallback: string): string {
   if (error instanceof AuthTimeoutError) return error.message;
+  if (error instanceof Error && error.message === "warming_up") return i18n.t("auth.warmingUp") as string;
   const message = error instanceof Error ? error.message : "";
   return message || fallback;
 }

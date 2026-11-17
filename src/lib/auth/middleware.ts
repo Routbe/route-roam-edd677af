@@ -9,7 +9,8 @@ import { createMiddleware } from "@tanstack/react-start";
  */
 export const requireAuth = createMiddleware({ type: "function" }).server(async ({ next }) => {
   const { currentUser } = await import("./session.server");
-  const user = await currentUser();
+  const { withWarmupGuard } = await import("./warmup-guard");
+  const user = await withWarmupGuard(currentUser());
   if (!user) throw Object.assign(new Error("Unauthorized"), { statusCode: 401 });
   // Converted accounts keep full access during their 30-day sunset (as admin of the new workspace).
   const { createUserDb } = await import("@/lib/db/user-client.server");
