@@ -20,7 +20,7 @@ describe("ProviderLogo", () => {
   it("stored SVG marks carry no script and no external reference", () => {
     for (const path of Object.values(PROVIDER_LOGO_FILES).filter((p) => p.endsWith(".svg"))) {
       const svg = readFileSync(join(PUBLIC, path), "utf8");
-      expect(svg, path).not.toMatch(/<script|on\w+\s*=|<foreignObject/i);
+      expect(svg, path).not.toMatch(/<script|\son[a-z]+\s*=|<foreignObject/i);
       expect(svg.match(/(?:href|src)\s*=\s*["'](?!#)[^"']*/gi) ?? [], path).toEqual([]);
     }
   });
