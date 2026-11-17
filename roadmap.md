@@ -363,3 +363,9 @@
 - [x] Webhook/decision bytes and anchors in Node.js Buffers, fill(0) right after the nullifier; PEPPER_SECRET accepted
 - [ ] Zero-knowledge humanity verifier that writes `zk_proof` rows — needs a chosen proof system/provider (owner)
 - [x] Full test suite green, including the load-sensitive tests
+
+## Verificatie & uitrol (2026-11-17)
+- [x] /verify herontworpen: "Geverifieerd profiel", zwarte knop, compacte zoekbalk + scrollbare chips, alleen Didit/W Identity als actieve kaarten, overige providers in "Toekomstige integraties"
+- [ ] 0287 + 0288 op Neon uitvoeren (GO gegeven) — wacht op MIGRATION_URL: niet aanwezig in deze omgeving, eigenaar draait migration-rollout.ts zelf
+- [ ] Daarna alleen-lezen controleren dat Neon op 0288 staat; pas dan HANDOVER.md-bijlage en dit bestand op "live"
+- [ ] Volgende taken (in volgorde): sessies 90 dagen + bevestigen met passkey; time-outcontrole Studio-profiel ("15 seconden"-melding)
