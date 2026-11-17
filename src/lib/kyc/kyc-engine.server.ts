@@ -79,15 +79,21 @@ export async function startDiditKyc(userId: string, originInput: string | null):
   });
 }
 
+/**
+ * realHuman mirrors the green "Real Human" shield (zero-knowledge proofs only, never KYC); the KYC
+ * result itself is legalIdentity, the blue "KYC Attested" shield.
+ */
 export async function kycStatus(userId: string): Promise<{ state: KycState; realHuman: boolean; legalIdentity: boolean }> {
   const id = await import("@/lib/identity/identity.server");
+  const { readPublicIdentity } = await import("@/lib/identity/public-identity.server");
+  const realHuman = (await readPublicIdentity(userId).catch(() => ({ realHuman: false }))).realHuman;
   return inMemberContext(userId, async () => {
     const s = await id.getIdentityStatus(userId);
-    if (s.tier2LegalIdentity) return { state: "verified", realHuman: s.tier1RealHuman, legalIdentity: true };
+    if (s.tier2LegalIdentity) return { state: "verified", realHuman, legalIdentity: true };
     const { sql } = await import("@/lib/neon");
     const rows = (await sql`select 1 as x from public.identity_verification_sessions
       where user_id = ${userId} and provider = 'didit' and expires_at > now() limit 1`.catch(() => [])) as unknown[];
-    return { state: rows.length ? "pending" : "none", realHuman: s.tier1RealHuman, legalIdentity: false };
+    return { state: rows.length ? "pending" : "none", realHuman, legalIdentity: false };
   });
 }
 
