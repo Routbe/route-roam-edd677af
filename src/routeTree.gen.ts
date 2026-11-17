@@ -416,6 +416,7 @@ import { Route as ApiPublicYoutubeCardRouteImport } from './routes/api_.public.y
 import { Route as ApiPublicYoutubePushRouteImport } from './routes/api_.public.youtube.push'
 import { Route as ApiUserVaultExportRouteImport } from './routes/api_.user.vault.export'
 import { Route as ApiV1AgentVaultRouteImport } from './routes/api_.v1.agent.vault'
+import { Route as ApiV1KycStatusRouteImport } from './routes/api_.v1.kyc.status'
 import { Route as ApiV1LedgerEventsRouteImport } from './routes/api_.v1.ledger.events'
 import { Route as ApiV1PowChallengeRouteImport } from './routes/api_.v1.pow.challenge'
 import { Route as ApiV1WorkspacesCommitRouteImport } from './routes/api_.v1.workspaces.commit'
@@ -444,6 +445,8 @@ import { Route as AuthenticatedStudioWWorkspaceSlugSettingsRouteImport } from '.
 import { Route as AuthenticatedStudioWWorkspaceSlugStudioRouteImport } from './routes/_authenticated/studio_.w.$workspaceSlug.studio'
 import { Route as ApiPublicBookingsIdActionRouteImport } from './routes/api_.public.bookings.$id.$action'
 import { Route as ApiPublicIntegrationsMastodonAvatarRouteImport } from './routes/api_.public.integrations.mastodon.avatar'
+import { Route as ApiV1KycDiditSessionRouteImport } from './routes/api_.v1.kyc.didit.session'
+import { Route as ApiV1KycDiditWebhookRouteImport } from './routes/api_.v1.kyc.didit.webhook'
 import { Route as ApiV1LedgerStreamsStreamIdRouteImport } from './routes/api_.v1.ledger.streams.$streamId'
 import { Route as ApiWalletRenderCardIdHeroDotpngRouteImport } from './routes/api_.wallet.render.$cardId.hero[.]png'
 import { Route as ApiWalletRenderCardIdVersionFileRouteImport } from './routes/api_.wallet.render.$cardId.$version.$file'
@@ -2579,6 +2582,11 @@ const ApiV1AgentVaultRoute = ApiV1AgentVaultRouteImport.update({
   path: '/api/v1/agent/vault',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1KycStatusRoute = ApiV1KycStatusRouteImport.update({
+  id: '/api_/v1/kyc/status',
+  path: '/api/v1/kyc/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1LedgerEventsRoute = ApiV1LedgerEventsRouteImport.update({
   id: '/api_/v1/ledger/events',
   path: '/api/v1/ledger/events',
@@ -2743,6 +2751,16 @@ const ApiPublicIntegrationsMastodonAvatarRoute =
     path: '/mastodon/avatar',
     getParentRoute: () => ApiPublicIntegrationsRoute,
   } as any)
+const ApiV1KycDiditSessionRoute = ApiV1KycDiditSessionRouteImport.update({
+  id: '/api_/v1/kyc/didit/session',
+  path: '/api/v1/kyc/didit/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1KycDiditWebhookRoute = ApiV1KycDiditWebhookRouteImport.update({
+  id: '/api_/v1/kyc/didit/webhook',
+  path: '/api/v1/kyc/didit/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1LedgerStreamsStreamIdRoute =
   ApiV1LedgerStreamsStreamIdRouteImport.update({
     id: '/api_/v1/ledger/streams/$streamId',
@@ -3174,6 +3192,7 @@ export interface FileRoutesByFullPath {
   '/api/public/youtube/push': typeof ApiPublicYoutubePushRoute
   '/api/user/vault/export': typeof ApiUserVaultExportRoute
   '/api/v1/agent/vault': typeof ApiV1AgentVaultRoute
+  '/api/v1/kyc/status': typeof ApiV1KycStatusRoute
   '/api/v1/ledger/events': typeof ApiV1LedgerEventsRoute
   '/api/v1/pow/challenge': typeof ApiV1PowChallengeRoute
   '/api/v1/workspaces/commit': typeof ApiV1WorkspacesCommitRoute
@@ -3202,6 +3221,8 @@ export interface FileRoutesByFullPath {
   '/studio/w/$workspaceSlug/studio': typeof AuthenticatedStudioWWorkspaceSlugStudioRoute
   '/api/public/bookings/$id/$action': typeof ApiPublicBookingsIdActionRoute
   '/api/public/integrations/mastodon/avatar': typeof ApiPublicIntegrationsMastodonAvatarRoute
+  '/api/v1/kyc/didit/session': typeof ApiV1KycDiditSessionRoute
+  '/api/v1/kyc/didit/webhook': typeof ApiV1KycDiditWebhookRoute
   '/api/v1/ledger/streams/$streamId': typeof ApiV1LedgerStreamsStreamIdRoute
   '/api/wallet/render/$cardId/hero.png': typeof ApiWalletRenderCardIdHeroDotpngRoute
   '/console/apps/$appId/': typeof AuthenticatedConsoleAppsAppIdIndexRoute
@@ -3597,6 +3618,7 @@ export interface FileRoutesByTo {
   '/api/public/youtube/push': typeof ApiPublicYoutubePushRoute
   '/api/user/vault/export': typeof ApiUserVaultExportRoute
   '/api/v1/agent/vault': typeof ApiV1AgentVaultRoute
+  '/api/v1/kyc/status': typeof ApiV1KycStatusRoute
   '/api/v1/ledger/events': typeof ApiV1LedgerEventsRoute
   '/api/v1/pow/challenge': typeof ApiV1PowChallengeRoute
   '/api/v1/workspaces/commit': typeof ApiV1WorkspacesCommitRoute
@@ -3625,6 +3647,8 @@ export interface FileRoutesByTo {
   '/studio/w/$workspaceSlug/studio': typeof AuthenticatedStudioWWorkspaceSlugStudioRoute
   '/api/public/bookings/$id/$action': typeof ApiPublicBookingsIdActionRoute
   '/api/public/integrations/mastodon/avatar': typeof ApiPublicIntegrationsMastodonAvatarRoute
+  '/api/v1/kyc/didit/session': typeof ApiV1KycDiditSessionRoute
+  '/api/v1/kyc/didit/webhook': typeof ApiV1KycDiditWebhookRoute
   '/api/v1/ledger/streams/$streamId': typeof ApiV1LedgerStreamsStreamIdRoute
   '/api/wallet/render/$cardId/hero.png': typeof ApiWalletRenderCardIdHeroDotpngRoute
   '/console/apps/$appId': typeof AuthenticatedConsoleAppsAppIdIndexRoute
@@ -4039,6 +4063,7 @@ export interface FileRoutesById {
   '/api_/public/youtube/push': typeof ApiPublicYoutubePushRoute
   '/api_/user/vault/export': typeof ApiUserVaultExportRoute
   '/api_/v1/agent/vault': typeof ApiV1AgentVaultRoute
+  '/api_/v1/kyc/status': typeof ApiV1KycStatusRoute
   '/api_/v1/ledger/events': typeof ApiV1LedgerEventsRoute
   '/api_/v1/pow/challenge': typeof ApiV1PowChallengeRoute
   '/api_/v1/workspaces/commit': typeof ApiV1WorkspacesCommitRoute
@@ -4067,6 +4092,8 @@ export interface FileRoutesById {
   '/_authenticated/studio_/w/$workspaceSlug/studio': typeof AuthenticatedStudioWWorkspaceSlugStudioRoute
   '/api_/public/bookings/$id/$action': typeof ApiPublicBookingsIdActionRoute
   '/api_/public/integrations/mastodon/avatar': typeof ApiPublicIntegrationsMastodonAvatarRoute
+  '/api_/v1/kyc/didit/session': typeof ApiV1KycDiditSessionRoute
+  '/api_/v1/kyc/didit/webhook': typeof ApiV1KycDiditWebhookRoute
   '/api_/v1/ledger/streams/$streamId': typeof ApiV1LedgerStreamsStreamIdRoute
   '/api_/wallet/render/$cardId/hero.png': typeof ApiWalletRenderCardIdHeroDotpngRoute
   '/_authenticated/console/apps/$appId/': typeof AuthenticatedConsoleAppsAppIdIndexRoute
@@ -4481,6 +4508,7 @@ export interface FileRouteTypes {
     | '/api/public/youtube/push'
     | '/api/user/vault/export'
     | '/api/v1/agent/vault'
+    | '/api/v1/kyc/status'
     | '/api/v1/ledger/events'
     | '/api/v1/pow/challenge'
     | '/api/v1/workspaces/commit'
@@ -4509,6 +4537,8 @@ export interface FileRouteTypes {
     | '/studio/w/$workspaceSlug/studio'
     | '/api/public/bookings/$id/$action'
     | '/api/public/integrations/mastodon/avatar'
+    | '/api/v1/kyc/didit/session'
+    | '/api/v1/kyc/didit/webhook'
     | '/api/v1/ledger/streams/$streamId'
     | '/api/wallet/render/$cardId/hero.png'
     | '/console/apps/$appId/'
@@ -4904,6 +4934,7 @@ export interface FileRouteTypes {
     | '/api/public/youtube/push'
     | '/api/user/vault/export'
     | '/api/v1/agent/vault'
+    | '/api/v1/kyc/status'
     | '/api/v1/ledger/events'
     | '/api/v1/pow/challenge'
     | '/api/v1/workspaces/commit'
@@ -4932,6 +4963,8 @@ export interface FileRouteTypes {
     | '/studio/w/$workspaceSlug/studio'
     | '/api/public/bookings/$id/$action'
     | '/api/public/integrations/mastodon/avatar'
+    | '/api/v1/kyc/didit/session'
+    | '/api/v1/kyc/didit/webhook'
     | '/api/v1/ledger/streams/$streamId'
     | '/api/wallet/render/$cardId/hero.png'
     | '/console/apps/$appId'
@@ -5345,6 +5378,7 @@ export interface FileRouteTypes {
     | '/api_/public/youtube/push'
     | '/api_/user/vault/export'
     | '/api_/v1/agent/vault'
+    | '/api_/v1/kyc/status'
     | '/api_/v1/ledger/events'
     | '/api_/v1/pow/challenge'
     | '/api_/v1/workspaces/commit'
@@ -5373,6 +5407,8 @@ export interface FileRouteTypes {
     | '/_authenticated/studio_/w/$workspaceSlug/studio'
     | '/api_/public/bookings/$id/$action'
     | '/api_/public/integrations/mastodon/avatar'
+    | '/api_/v1/kyc/didit/session'
+    | '/api_/v1/kyc/didit/webhook'
     | '/api_/v1/ledger/streams/$streamId'
     | '/api_/wallet/render/$cardId/hero.png'
     | '/_authenticated/console/apps/$appId/'
@@ -5610,6 +5646,7 @@ export interface RootRouteChildren {
   ApiPublicYoutubePushRoute: typeof ApiPublicYoutubePushRoute
   ApiUserVaultExportRoute: typeof ApiUserVaultExportRoute
   ApiV1AgentVaultRoute: typeof ApiV1AgentVaultRoute
+  ApiV1KycStatusRoute: typeof ApiV1KycStatusRoute
   ApiV1LedgerEventsRoute: typeof ApiV1LedgerEventsRoute
   ApiV1PowChallengeRoute: typeof ApiV1PowChallengeRoute
   ApiV1WorkspacesCommitRoute: typeof ApiV1WorkspacesCommitRoute
@@ -5617,6 +5654,8 @@ export interface RootRouteChildren {
   ApiWalletRenderHeroDotpngRoute: typeof ApiWalletRenderHeroDotpngRoute
   ApiWalletRenderPremiumLogoDotpngRoute: typeof ApiWalletRenderPremiumLogoDotpngRoute
   ApiPublicBookingsIdActionRoute: typeof ApiPublicBookingsIdActionRoute
+  ApiV1KycDiditSessionRoute: typeof ApiV1KycDiditSessionRoute
+  ApiV1KycDiditWebhookRoute: typeof ApiV1KycDiditWebhookRoute
   ApiV1LedgerStreamsStreamIdRoute: typeof ApiV1LedgerStreamsStreamIdRoute
   ApiWalletRenderCardIdHeroDotpngRoute: typeof ApiWalletRenderCardIdHeroDotpngRoute
   ApiWalletRenderCardIdVersionFileRoute: typeof ApiWalletRenderCardIdVersionFileRoute
@@ -8474,6 +8513,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1AgentVaultRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api_/v1/kyc/status': {
+      id: '/api_/v1/kyc/status'
+      path: '/api/v1/kyc/status'
+      fullPath: '/api/v1/kyc/status'
+      preLoaderRoute: typeof ApiV1KycStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api_/v1/ledger/events': {
       id: '/api_/v1/ledger/events'
       path: '/api/v1/ledger/events'
@@ -8669,6 +8715,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/integrations/mastodon/avatar'
       preLoaderRoute: typeof ApiPublicIntegrationsMastodonAvatarRouteImport
       parentRoute: typeof ApiPublicIntegrationsRoute
+    }
+    '/api_/v1/kyc/didit/session': {
+      id: '/api_/v1/kyc/didit/session'
+      path: '/api/v1/kyc/didit/session'
+      fullPath: '/api/v1/kyc/didit/session'
+      preLoaderRoute: typeof ApiV1KycDiditSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api_/v1/kyc/didit/webhook': {
+      id: '/api_/v1/kyc/didit/webhook'
+      path: '/api/v1/kyc/didit/webhook'
+      fullPath: '/api/v1/kyc/didit/webhook'
+      preLoaderRoute: typeof ApiV1KycDiditWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api_/v1/ledger/streams/$streamId': {
       id: '/api_/v1/ledger/streams/$streamId'
@@ -9555,6 +9615,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicYoutubePushRoute: ApiPublicYoutubePushRoute,
   ApiUserVaultExportRoute: ApiUserVaultExportRoute,
   ApiV1AgentVaultRoute: ApiV1AgentVaultRoute,
+  ApiV1KycStatusRoute: ApiV1KycStatusRoute,
   ApiV1LedgerEventsRoute: ApiV1LedgerEventsRoute,
   ApiV1PowChallengeRoute: ApiV1PowChallengeRoute,
   ApiV1WorkspacesCommitRoute: ApiV1WorkspacesCommitRoute,
@@ -9562,6 +9623,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiWalletRenderHeroDotpngRoute: ApiWalletRenderHeroDotpngRoute,
   ApiWalletRenderPremiumLogoDotpngRoute: ApiWalletRenderPremiumLogoDotpngRoute,
   ApiPublicBookingsIdActionRoute: ApiPublicBookingsIdActionRoute,
+  ApiV1KycDiditSessionRoute: ApiV1KycDiditSessionRoute,
+  ApiV1KycDiditWebhookRoute: ApiV1KycDiditWebhookRoute,
   ApiV1LedgerStreamsStreamIdRoute: ApiV1LedgerStreamsStreamIdRoute,
   ApiWalletRenderCardIdHeroDotpngRoute: ApiWalletRenderCardIdHeroDotpngRoute,
   ApiWalletRenderCardIdVersionFileRoute: ApiWalletRenderCardIdVersionFileRoute,

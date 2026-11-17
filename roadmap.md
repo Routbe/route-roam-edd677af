@@ -343,3 +343,15 @@
 - [ ] Automatic epoch rotation when a manager role is revoked
 - [ ] /w/:slug/ask seals against the active epoch key; managers decrypt only through their registered device envelopes
 - [ ] Device key migration prepared, not applied — wait for owner GO
+
+## Owner directive 2026-11-17 — Sovereign Identity OS, multi-provider engine, Didit KYC
+- [x] 0281: already live on Neon since 2026-11-15, nothing to run
+- [x] Provider Discovery Hub on the verification page (search, chips, region-aware, privacy ratings; nl/en/fr/de)
+- [x] Universal nullifier pipeline (canonical ICAO/eIDAS anchors, Poseidon256 + BLAKE3 + pepper) with fast-check tests
+- [x] Didit v3 engine: session, signed webhook, status endpoint, verification modal; no names or numbers stored
+- [x] db-pending/0288 (cross-provider nullifier table + rout_kyc_attest) written and tested offline
+- [ ] Apply 0288 on Neon — waits for the owner's literal GO
+- [ ] Set DIDIT_API_KEY, DIDIT_WEBHOOK_SECRET, DIDIT_WORKFLOW_ID, IDENTITY_HASH_PEPPER on the owner's host and register the webhook URL at Didit — owner
+- [ ] Other providers in the hub (itsme, DigiD, eID, France Identité, MitID, CIE, IDnow, Shufti Pro, Trulioo, World ID) — each needs a contract and keys from the owner
+- [ ] Green "Real Human" badge only from zero-knowledge proofs — owner decision (today also W Identity/Didit/manual)
+- [ ] Workspace IBAN for Didit-only owners: name match no longer possible without a stored name — owner decision (domain path works)
