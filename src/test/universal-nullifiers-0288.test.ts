@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * db-pending/0288 (universal identity nullifiers) on an offline replay of db/, applied with the
+ * db/0288 (universal identity nullifiers, live on Neon since 2026-11-17) on an offline replay of db/ without it, applied with the
  * definer guard in the same transaction. Never touches Neon. Proves:
  *   - rout_app holds no write right on the table and cannot read the nullifier column;
  *   - rout_kyc_attest registers anchors only for rout.current_user_id, refuses another account's
@@ -17,7 +17,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import fc from "fast-check";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { applyPending, replayDb, ROOT } from "../../scripts/formal-rls/replay";
+import { applyReleased, replayDb, ROOT } from "../../scripts/formal-rls/replay";
 import { universalNullifier } from "@/lib/kyc/nullifier";
 
 const A = "00000000-0000-4000-8000-000000000881";
@@ -31,8 +31,8 @@ const ATTEST = "select public.rout_kyc_attest($1, $2::text[], $3::text[], $4, $5
 
 let db: PGlite;
 beforeAll(async () => {
-  db = await replayDb();
-  await applyPending(db, "0288_universal_identity_nullifiers.sql");
+  db = await replayDb((f) => f !== "0288_universal_identity_nullifiers.sql");
+  await applyReleased(db, "0288_universal_identity_nullifiers.sql");
   await db.exec(`
     insert into public.users (id, email) values ('${A}', 'a@example.test'), ('${B}', 'b@example.test'), ('${C}', 'c@example.test');
     insert into public.profiles (id, username) values ('${A}', 'nf-a'), ('${B}', 'nf-b'), ('${C}', 'nf-c')

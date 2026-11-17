@@ -1,6 +1,6 @@
 /**
  * A1 backfill: seals legacy plaintext in BACKFILL_FIELDS and sets the plaintext column to NULL.
- * Only after the owner's "GO A1" and once db-pending/0287 is applied.
+ * Only after the owner's "GO A1" and once db/0287 is applied.
  *   bun scripts/a1-backfill.ts            dry run: counts rows still holding plaintext, writes nothing
  *   bun scripts/a1-backfill.ts --apply    seals in batches of 200, one transaction per batch
  * Needs ROUT_VAULT_KEK and MIGRATION_URL (owner) or DATABASE_URL. Never registers a key: the first

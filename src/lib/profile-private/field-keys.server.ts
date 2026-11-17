@@ -1,5 +1,5 @@
 /**
- * Server side of the A1 key ring: reads the wrapped key versions through the db-pending/0287
+ * Server side of the A1 key ring: reads the wrapped key versions through the db/0287
  * definers, unwraps them under ROUT_VAULT_KEK (read per call, never at module scope) and wipes
  * every key when the callback returns. The first version is created on first use; later versions
  * (rotation) are an owner operation (scripts/a1-field-keys.ts), never done by the app role.

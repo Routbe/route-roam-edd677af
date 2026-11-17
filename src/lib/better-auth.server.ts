@@ -11,6 +11,7 @@ import { betterAuthDatabase } from "@/lib/neon-kysely.server";
 import { APP_DOMAINS } from "@/lib/app-domains";
 import { canonicalAppUrl, isApprovedHost } from "@/lib/app-url";
 import { EXPLICIT_ACCOUNT_LINKING } from "@/lib/identity/link-rules";
+import { SESSION_MAX_AGE_SEC, SESSION_REFRESH_AFTER_SEC } from "@/lib/auth/session-policy";
 import { AUTH_COOKIE_ATTRIBUTES, configuredAuthOrigin , chooseAuthBaseUrl } from "@/lib/auth-origin";
 import { logServerError } from "@/lib/security/safe-errors";
 import { fediverseSession } from "@/lib/auth/fediverse-session";
@@ -350,8 +351,8 @@ export function createRoutAuth(request?: Request) {
     user: { modelName: "neon_auth.user" },
     session: {
       modelName: "neon_auth.session",
-      expiresIn: 60 * 60 * 24 * 30,
-      updateAge: 60 * 60 * 24,
+      expiresIn: SESSION_MAX_AGE_SEC,
+      updateAge: SESSION_REFRESH_AFTER_SEC,
     },
     account: {
       modelName: "neon_auth.account",

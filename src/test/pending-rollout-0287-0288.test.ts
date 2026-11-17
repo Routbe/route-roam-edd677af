@@ -1,7 +1,8 @@
 // @vitest-environment node
 /**
- * Combined rollout of db-pending/0287 (A1 field-level AEAD) and db-pending/0288 (nullifier
- * registry) on an offline replay of db/, recorded in schema_migrations exactly as Neon has it.
+ * Combined rollout of db/0287 (A1 field-level AEAD) and db/0288 (nullifier registry), both live on
+ * Neon since 2026-11-17, on an offline replay of db/ up to 0286, recorded in schema_migrations
+ * exactly as Neon had it before the GO.
  * Each file goes through the same one-transaction gateway batch as scripts/migration-rollout.ts
  * (ASCII-JSON transport, in-transaction SHA-256 check, predecessor check, definer guard).
  * The checksums are pinned to db-pending/ROLLOUT-0287-0288.md, the notes the owner gives the GO on:
@@ -21,7 +22,7 @@ const PENDING = join(ROOT, "db-pending");
 const F0286 = "0286_fk_indexes_trigger_rights.sql";
 const F0287 = "0287_profile_field_encryption.sql";
 const F0288 = "0288_universal_identity_nullifiers.sql";
-const body = (f: string) => readFileSync(join(PENDING, f), "utf8");
+const body = (f: string) => readFileSync(join(f.endsWith("_rollback.sql") ? PENDING : DB, f), "utf8");
 const NOTES = readFileSync(join(PENDING, "ROLLOUT-0287-0288.md"), "utf8");
 
 /** sha256 values the notes name for a file (every occurrence must agree). */
@@ -51,7 +52,7 @@ describe("combined rollout 0287 -> 0288 (offline)", () => {
     const { btree_gist } = await import("@electric-sql/pglite/contrib/btree_gist");
     const { pgcrypto } = await import("@electric-sql/pglite/contrib/pgcrypto");
     db = await PGlite.create({ extensions: { pgcrypto, btree_gist } });
-    const files = listMigrationFiles(DB);
+    const files = listMigrationFiles(DB).filter((f) => f < "0287");
     for (const step of planMigrations(files, new Set())) {
       if (step.action !== "run") continue;
       const guard = guardedMigration(step.file) ? `;\n${migrationDefinerGuardSql(step.file)}` : "";
@@ -81,9 +82,10 @@ describe("combined rollout 0287 -> 0288 (offline)", () => {
     expect(NOTES).toContain(`\`${checksumOf(readFileSync(join(DB, F0286), "utf8"))}\``);
   });
 
-  it("db/ ends at 0286, so 0287 and 0288 are the next two files", async () => {
+  it("0287 and 0288 are the two files right after 0286 in db/", async () => {
     fksBefore = await unindexedFks();
-    expect(listMigrationFiles(DB).at(-1)).toBe(F0286);
+    const all = listMigrationFiles(DB);
+    expect(all.slice(all.indexOf(F0286), all.indexOf(F0286) + 3)).toEqual([F0286, F0287, F0288]);
   });
 
   it("refuses 0288 before 0287 and a single changed byte, without running anything", async () => {

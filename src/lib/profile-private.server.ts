@@ -45,7 +45,7 @@ export async function exportMyProfileRow(userId: string): Promise<Record<string,
       const rows = (await sql`select public.rout_profile_export_mine() as row`) as { row: Record<string, unknown> | null }[];
       const row = rows[0]?.row ?? null;
       if (!row) return null;
-      // A1 (db-pending/0287): the owner's export shows sealed fields opened, never ciphertext or indexes.
+      // A1 (db/0287): the owner's export shows sealed fields opened, never ciphertext or indexes.
       const { sealedBytesFromJson, withoutSealedColumns } = await import("./profile-private/sealed-profile");
       const { openProfileRowOne } = await import("./profile-private/sealed-profile.server");
       const { PRIVATE_PROFILE_FIELDS } = await import("./profile-private/field-seal");

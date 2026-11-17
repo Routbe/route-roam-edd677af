@@ -12,7 +12,7 @@ describe("provider discovery", () => {
   });
 
   it("uses only provider ids the 0288 provider CHECK allows", () => {
-    const sql = readFileSync("db-pending/0288_universal_identity_nullifiers.sql", "utf8");
+    const sql = readFileSync("db/0288_universal_identity_nullifiers.sql", "utf8");
     for (const p of IDENTITY_PROVIDERS) expect(sql).toContain(`'${p.id}'`);
   });
 

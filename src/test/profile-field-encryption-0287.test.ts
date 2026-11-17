@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * db-pending/0287 (A1 EXPAND) on an offline replay of db/, applied with the definer guard in the
+ * db/0287 (A1 EXPAND, live on Neon since 2026-11-17) on an offline replay of db/ up to 0286, applied with the definer guard in the
  * same transaction. Proves without touching Neon:
  *   - rout_app and PUBLIC hold no right on vault_enclave.profile_field_keys; rout_app executes
  *     exactly the three entry points and the shape check, and never the guard trigger;
@@ -17,7 +17,7 @@
 import { PGlite } from "@electric-sql/pglite";
 import fc from "fast-check";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { applyPending, replayDb } from "../../scripts/formal-rls/replay";
+import { applyReleased, replayDb } from "../../scripts/formal-rls/replay";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { deriveFieldKek, generateFieldKey, openFieldKeyring, type FieldKeyring, type StoredFieldKey } from "@/lib/profile-private/field-keys";
@@ -35,8 +35,8 @@ const ENTRY_POINTS = ["rout_profile_field_keys()", "rout_profile_field_key_regis
 let db: PGlite;
 
 beforeAll(async () => {
-  db = await replayDb();
-  await applyPending(db, FILE);
+  db = await replayDb((f) => f < "0287");
+  await applyReleased(db, FILE);
   await db.exec(`
     insert into public.users (id, email) values ('${A}', 'a@example.test'), ('${B}', 'b@example.test'), ('${C}', 'c@example.test');
     insert into public.profiles (id, username) values ('${A}', 'a-one'), ('${B}', 'b-two'), ('${C}', 'c-three')

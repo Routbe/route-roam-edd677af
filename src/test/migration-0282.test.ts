@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * db/0282 on an offline replay of db/: the blue identity mark comes only from a completed
+ * db/0282 on an offline replay of db/ up to 0287: the blue identity mark comes only from a completed
  * Didit attestation. profiles.verified and is_paid (payment, Pro, admin grants) never count.
  * Neon is not touched.
  */
@@ -17,7 +17,8 @@ const ALL = [DIDIT_UNPAID, PAID_ONLY, UPGRADED, HUMAN, FAILED];
 
 let db: PGlite;
 beforeAll(async () => {
-  db = await replayDb();
+  // 0282 as it stood: db/0288 later redefines these badge functions (tested in universal-nullifiers-0288).
+  db = await replayDb((f) => f < "0288");
   await db.exec(`
     insert into public.users (id, email) values ${ALL.map((id, i) => `('${id}', 'b${i}@example.test')`).join(", ")};
     insert into public.profiles (id, username, verified, is_paid) values

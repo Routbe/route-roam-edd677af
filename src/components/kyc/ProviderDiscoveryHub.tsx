@@ -1,6 +1,7 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Building2, ChevronDown, Loader2, Search, ShieldCheck } from "lucide-react";
+import { ChevronDown, Loader2, Search } from "lucide-react";
+import { ProviderLogo } from "@/components/icons/providers/ProviderLogo";
 import { hubCopy } from "@/lib/kyc/hub-copy";
 import { cn } from "@/lib/utils";
 import {
@@ -16,8 +17,9 @@ const FILTERS: ProviderFilter[] = ["all", "national_eid", "passport_nfc", "zero_
 /**
  * Provider Discovery Hub: one compact sticky control bar (search + snap-scrolling chips), the
  * integrated engines as active cards, and every other provider folded into a compact
- * "upcoming" grid. Only providers with an active engine can be started. Logos are inline SVG
- * drawn by ROUT (no third-party image requests); without a mark a neutral icon is shown.
+ * "upcoming" grid. Only providers with an active engine can be started. Logos come from
+ * ProviderLogo: official marks stored in this repository (no third-party image requests), with a
+ * neutral Building2 icon when a provider has no mark.
  */
 export function ProviderDiscoveryHub({
   active,
@@ -111,7 +113,7 @@ export function ProviderDiscoveryHub({
               {upcoming.map((p) => (
                 <li key={p.id}>
                   <article aria-label={p.name} className="flex h-full items-center gap-2 bg-background p-3">
-                    <ProviderMark provider={p} size="sm" />
+                    <ProviderLogo name={p.id} size="sm" />
                     <div className="min-w-0">
                       <p className="truncate text-xs font-semibold">{p.name}</p>
                       <p className="truncate text-[11px] text-muted-foreground">{c.ratings[p.ratings[0]!]}</p>
@@ -151,7 +153,7 @@ function ActiveCard({
   return (
     <article aria-label={p.name} className="flex h-full flex-col gap-3 rounded-2xl border border-foreground/15 bg-card p-4">
       <div className="flex items-center gap-3">
-        <ProviderMark provider={p} size="lg" />
+        <ProviderLogo name={p.id} size="lg" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{p.name}</p>
           <p className="truncate text-xs text-muted-foreground">
@@ -179,31 +181,3 @@ function ActiveCard({
 }
 
 /** Inline vector marks drawn by ROUT for the integrated engines; never fetched from a vendor CDN. */
-function ProviderMark({ provider: p, size }: { provider: IdentityProviderEntry; size: "sm" | "lg" }) {
-  const box = size === "lg" ? "h-10 w-10 rounded-xl" : "h-8 w-8 rounded-lg";
-  const icon = size === "lg" ? "h-5 w-5" : "h-4 w-4";
-  let mark: ReactNode;
-  if (p.id === "didit") {
-    mark = (
-      <svg viewBox="0 0 24 24" className={icon} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-        <path d="M6 4h5a8 8 0 0 1 0 16H6z" />
-        <circle cx="11" cy="12" r="2.5" fill="currentColor" stroke="none" />
-      </svg>
-    );
-  } else if (p.id === "w_identity") {
-    mark = (
-      <svg viewBox="0 0 24 24" className={icon} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d="M3 6l4 12 5-9 5 9 4-12" />
-      </svg>
-    );
-  } else if (p.categories.includes("zero_knowledge")) {
-    mark = <ShieldCheck className={icon} strokeWidth={1.75} aria-hidden />;
-  } else {
-    mark = <Building2 className={icon} strokeWidth={1.75} aria-hidden />;
-  }
-  return (
-    <span aria-hidden className={cn("flex shrink-0 items-center justify-center border border-border bg-background text-foreground", box)}>
-      {mark}
-    </span>
-  );
-}

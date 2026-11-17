@@ -18140,18 +18140,231 @@
           "default": null,
           "identity": null,
           "generated": null
+        },
+        {
+          "name": "business_vat_sealed",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "stripe_account_id_sealed",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "payment_method_sealed",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "moderation_reason_sealed",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "moderated_by_sealed",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "email_sealed",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "forwarding_email_sealed",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "legal_first_name_sealed",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "legal_last_name_sealed",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "last_city_sealed",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "last_country_sealed",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "business_vat_bidx",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "stripe_account_id_bidx",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "email_bidx",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "forwarding_email_bidx",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "forwarding_email_token_bidx",
+          "type": "bytea",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
         }
       ],
       "constraints": [
+        {
+          "name": "profiles_business_vat_bidx_len",
+          "kind": "c",
+          "def": "CHECK (((business_vat_bidx IS NULL) OR (octet_length(business_vat_bidx) = 32)))"
+        },
+        {
+          "name": "profiles_business_vat_bidx_pair",
+          "kind": "c",
+          "def": "CHECK (((business_vat_bidx IS NULL) = (business_vat_sealed IS NULL)))"
+        },
+        {
+          "name": "profiles_business_vat_sealed_shape",
+          "kind": "c",
+          "def": "CHECK (rout_rpf1_shape_ok(business_vat_sealed))"
+        },
+        {
+          "name": "profiles_email_bidx_len",
+          "kind": "c",
+          "def": "CHECK (((email_bidx IS NULL) OR (octet_length(email_bidx) = 32)))"
+        },
+        {
+          "name": "profiles_email_bidx_pair",
+          "kind": "c",
+          "def": "CHECK (((email_bidx IS NULL) = (email_sealed IS NULL)))"
+        },
+        {
+          "name": "profiles_email_sealed_shape",
+          "kind": "c",
+          "def": "CHECK (rout_rpf1_shape_ok(email_sealed))"
+        },
+        {
+          "name": "profiles_forwarding_email_bidx_len",
+          "kind": "c",
+          "def": "CHECK (((forwarding_email_bidx IS NULL) OR (octet_length(forwarding_email_bidx) = 32)))"
+        },
+        {
+          "name": "profiles_forwarding_email_bidx_pair",
+          "kind": "c",
+          "def": "CHECK (((forwarding_email_bidx IS NULL) = (forwarding_email_sealed IS NULL)))"
+        },
+        {
+          "name": "profiles_forwarding_email_sealed_shape",
+          "kind": "c",
+          "def": "CHECK (rout_rpf1_shape_ok(forwarding_email_sealed))"
+        },
+        {
+          "name": "profiles_forwarding_email_token_bidx_len",
+          "kind": "c",
+          "def": "CHECK (((forwarding_email_token_bidx IS NULL) OR (octet_length(forwarding_email_token_bidx) = 32)))"
+        },
         {
           "name": "profiles_id_fkey",
           "kind": "f",
           "def": "FOREIGN KEY (id) REFERENCES users(id) ON DELETE CASCADE"
         },
         {
+          "name": "profiles_last_city_sealed_shape",
+          "kind": "c",
+          "def": "CHECK (rout_rpf1_shape_ok(last_city_sealed))"
+        },
+        {
+          "name": "profiles_last_country_sealed_shape",
+          "kind": "c",
+          "def": "CHECK (rout_rpf1_shape_ok(last_country_sealed))"
+        },
+        {
+          "name": "profiles_legal_first_name_sealed_shape",
+          "kind": "c",
+          "def": "CHECK (rout_rpf1_shape_ok(legal_first_name_sealed))"
+        },
+        {
+          "name": "profiles_legal_last_name_sealed_shape",
+          "kind": "c",
+          "def": "CHECK (rout_rpf1_shape_ok(legal_last_name_sealed))"
+        },
+        {
           "name": "profiles_moderated_by_fkey",
           "kind": "f",
           "def": "FOREIGN KEY (moderated_by) REFERENCES users(id) ON DELETE SET NULL"
+        },
+        {
+          "name": "profiles_moderated_by_sealed_shape",
+          "kind": "c",
+          "def": "CHECK (rout_rpf1_shape_ok(moderated_by_sealed))"
+        },
+        {
+          "name": "profiles_moderation_reason_sealed_shape",
+          "kind": "c",
+          "def": "CHECK (rout_rpf1_shape_ok(moderation_reason_sealed))"
+        },
+        {
+          "name": "profiles_payment_method_sealed_shape",
+          "kind": "c",
+          "def": "CHECK (rout_rpf1_shape_ok(payment_method_sealed))"
         },
         {
           "name": "profiles_pkey",
@@ -18172,6 +18385,21 @@
           "name": "profiles_root_subdomain_status_check",
           "kind": "c",
           "def": "CHECK ((root_subdomain_status = ANY (ARRAY['none'::text, 'pending_dns'::text, 'active'::text])))"
+        },
+        {
+          "name": "profiles_stripe_account_id_bidx_len",
+          "kind": "c",
+          "def": "CHECK (((stripe_account_id_bidx IS NULL) OR (octet_length(stripe_account_id_bidx) = 32)))"
+        },
+        {
+          "name": "profiles_stripe_account_id_bidx_pair",
+          "kind": "c",
+          "def": "CHECK (((stripe_account_id_bidx IS NULL) = (stripe_account_id_sealed IS NULL)))"
+        },
+        {
+          "name": "profiles_stripe_account_id_sealed_shape",
+          "kind": "c",
+          "def": "CHECK (rout_rpf1_shape_ok(stripe_account_id_sealed))"
         },
         {
           "name": "profiles_stripe_account_status_check",
@@ -18200,11 +18428,16 @@
         }
       ],
       "indexes": [
+        "CREATE INDEX profiles_business_vat_bidx_idx ON public.profiles USING btree (business_vat_bidx) WHERE (business_vat_bidx IS NOT NULL)",
+        "CREATE INDEX profiles_email_bidx_idx ON public.profiles USING btree (email_bidx) WHERE (email_bidx IS NOT NULL)",
         "CREATE INDEX profiles_email_idx ON public.profiles USING btree (lower(email)) WHERE (email IS NOT NULL)",
+        "CREATE INDEX profiles_forwarding_email_bidx_idx ON public.profiles USING btree (forwarding_email_bidx) WHERE (forwarding_email_bidx IS NOT NULL)",
         "CREATE INDEX profiles_moderated_by_idx ON public.profiles USING btree (moderated_by)",
         "CREATE INDEX profiles_referred_by_idx ON public.profiles USING btree (referred_by)",
         "CREATE INDEX profiles_shadowbanned_idx ON public.profiles USING btree (id) WHERE is_shadowbanned",
         "CREATE INDEX profiles_workspace_idx ON public.profiles USING btree (workspace_id) WHERE (workspace_id IS NOT NULL)",
+        "CREATE UNIQUE INDEX profiles_forwarding_email_token_bidx_key ON public.profiles USING btree (forwarding_email_token_bidx) WHERE (forwarding_email_token_bidx IS NOT NULL)",
+        "CREATE UNIQUE INDEX profiles_stripe_account_id_bidx_key ON public.profiles USING btree (stripe_account_id_bidx) WHERE (stripe_account_id_bidx IS NOT NULL)",
         "CREATE UNIQUE INDEX profiles_stripe_account_id_key ON public.profiles USING btree (stripe_account_id) WHERE (stripe_account_id IS NOT NULL)",
         "CREATE UNIQUE INDEX profiles_subdomain_alias_ci_key ON public.profiles USING btree (lower(subdomain_alias)) WHERE ((subdomain_alias IS NOT NULL) AND (subdomain_alias <> ''::text))",
         "CREATE UNIQUE INDEX profiles_subdomain_alias_key ON public.profiles USING btree (lower(subdomain_alias)) WHERE (subdomain_alias IS NOT NULL)",
@@ -18302,6 +18535,8 @@
             "business_info",
             "business_name",
             "business_vat",
+            "business_vat_bidx",
+            "business_vat_sealed",
             "card_style",
             "country_code",
             "created_at",
@@ -18309,7 +18544,12 @@
             "display_name",
             "display_prefs",
             "early_believer_at",
+            "email_bidx",
+            "email_sealed",
             "favicon_url",
+            "forwarding_email_bidx",
+            "forwarding_email_sealed",
+            "forwarding_email_token_bidx",
             "forwarding_email_verified",
             "handle_grant",
             "id",
@@ -18323,10 +18563,17 @@
             "is_paid",
             "is_shadowbanned",
             "is_suspended",
+            "last_city_sealed",
+            "last_country_sealed",
+            "legal_first_name_sealed",
+            "legal_last_name_sealed",
             "moderated_at",
             "moderated_by",
+            "moderated_by_sealed",
             "moderation_reason",
+            "moderation_reason_sealed",
             "payment_method",
+            "payment_method_sealed",
             "preferred_language",
             "profile_descriptions",
             "reach_last_synced_at",
@@ -18339,6 +18586,8 @@
             "show_vcard_button",
             "status",
             "stripe_account_id",
+            "stripe_account_id_bidx",
+            "stripe_account_id_sealed",
             "stripe_account_status",
             "stripe_charges_enabled",
             "stripe_payouts_enabled",
@@ -26017,6 +26266,169 @@
     },
     {
       "schema": "public",
+      "name": "verified_identity_nullifiers",
+      "columns": [
+        {
+          "name": "universal_nullifier",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "provider",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "anchor_kind",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "is_real_human",
+          "type": "boolean",
+          "notNull": true,
+          "default": "false",
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "has_legal_identity",
+          "type": "boolean",
+          "notNull": true,
+          "default": "false",
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "jurisdiction",
+          "type": "text",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "evidence",
+          "type": "text",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "attested_at",
+          "type": "timestamp with time zone",
+          "notNull": true,
+          "default": "now()",
+          "identity": null,
+          "generated": null
+        }
+      ],
+      "constraints": [
+        {
+          "name": "verified_identity_nullifiers_anchor_kind_check",
+          "kind": "c",
+          "def": "CHECK ((anchor_kind = ANY (ARRAY['personal_number'::text, 'document'::text, 'provider_subject'::text])))"
+        },
+        {
+          "name": "verified_identity_nullifiers_evidence_check",
+          "kind": "c",
+          "def": "CHECK ((evidence = ANY (ARRAY['kyc_document'::text, 'zk_proof'::text])))"
+        },
+        {
+          "name": "verified_identity_nullifiers_jurisdiction_check",
+          "kind": "c",
+          "def": "CHECK (((jurisdiction IS NULL) OR (jurisdiction ~ '^[A-Z]{3}$'::text)))"
+        },
+        {
+          "name": "verified_identity_nullifiers_pkey",
+          "kind": "p",
+          "def": "PRIMARY KEY (universal_nullifier)"
+        },
+        {
+          "name": "verified_identity_nullifiers_provider_check",
+          "kind": "c",
+          "def": "CHECK ((provider = ANY (ARRAY['didit'::text, 'w_identity'::text, 'itsme'::text, 'digid'::text, 'eid'::text, 'france_identite'::text, 'mitid'::text, 'cie'::text, 'idnow'::text, 'shufti_pro'::text, 'trulioo'::text, 'world_id'::text, 'manual'::text])))"
+        },
+        {
+          "name": "verified_identity_nullifiers_universal_nullifier_check",
+          "kind": "c",
+          "def": "CHECK ((universal_nullifier ~ '^[0-9a-f]{64}$'::text))"
+        },
+        {
+          "name": "verified_identity_nullifiers_user_id_fkey",
+          "kind": "f",
+          "def": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "verified_identity_nullifiers_zk_no_legal",
+          "kind": "c",
+          "def": "CHECK (((evidence = 'kyc_document'::text) OR (NOT has_legal_identity)))"
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX verified_identity_nullifiers_user_id_fkx ON public.verified_identity_nullifiers USING btree (user_id)"
+      ],
+      "triggers": [],
+      "rls": true,
+      "forceRls": false,
+      "policies": [
+        {
+          "name": "atomic_merge_executor",
+          "permissive": true,
+          "roles": [
+            "rout_merge_executor"
+          ],
+          "cmd": "SELECT",
+          "using": "true",
+          "check": null
+        },
+        {
+          "name": "rout_scope",
+          "permissive": true,
+          "roles": [
+            "rout_app"
+          ],
+          "cmd": "SELECT",
+          "using": "(user_id = rout_current_user_id())",
+          "check": null
+        }
+      ],
+      "grants": {},
+      "columnGrants": {
+        "rout_app": {
+          "SELECT": [
+            "anchor_kind",
+            "attested_at",
+            "evidence",
+            "has_legal_identity",
+            "is_real_human",
+            "jurisdiction",
+            "provider",
+            "user_id"
+          ]
+        }
+      }
+    },
+    {
+      "schema": "public",
       "name": "wallet_passes",
       "columns": [
         {
@@ -30317,7 +30729,7 @@
         {
           "name": "audit_logs_action_check",
           "kind": "c",
-          "def": "CHECK ((action = ANY (ARRAY['step_up_register'::text, 'token_store'::text, 'token_retrieve'::text, 'server_key_register'::text, 'sdm_card_register'::text, 'sdm_recovery_retrieve'::text, 'sdm_recovery_confirm'::text, 'sdm_fleet_register'::text, 'sdm_batch_register'::text, 'sdm_batch_cards_register'::text, 'sdm_tap_begin'::text, 'sdm_tap_confirm'::text, 'sdm_tap_consume'::text, 'sdm_card_activate'::text, 'sdm_batch_list'::text, 'sdm_batch_export'::text, 'sdm_station_register'::text, 'sdm_station_list'::text, 'sdm_station_retire'::text, 'card_step_up_begin'::text, 'card_step_up_complete'::text, 'card_step_up_claim'::text, 'sdm_card_revoke'::text, 'pake_setup_register'::text, 'pake_register'::text, 'pake_signup_register'::text, 'pake_unregister'::text, 'pake_login'::text, 'passkey_attestation_record'::text, 'recovery_v4_begin'::text, 'recovery_v4_confirm'::text, 'recovery_v4_commit'::text, 'recovery_v4_abort'::text, 'recovery_v4_remove'::text, 'recovery_v4_expire'::text, 'recovery_v4_replay'::text, 'recovery_v4_compromise'::text, 'recovery_v4_server_share'::text, 'anon_host_key_init'::text, 'anon_host_key_advance'::text, 'anon_host_key_retire'::text, 'anon_host_state_read'::text, 'anon_booking_record'::text, 'anon_booking_check'::text, 'anon_pseudonym_invalidate'::text, 'anon_capacity_open'::text, 'anon_ledger_read'::text, 'anon_host_purge'::text, 'anon_host_merge'::text, 'anon_device_register'::text, 'anon_device_revoke'::text, 'anon_device_list'::text])))"
+          "def": "CHECK ((action = ANY (ARRAY['step_up_register'::text, 'token_store'::text, 'token_retrieve'::text, 'server_key_register'::text, 'sdm_card_register'::text, 'sdm_recovery_retrieve'::text, 'sdm_recovery_confirm'::text, 'sdm_fleet_register'::text, 'sdm_batch_register'::text, 'sdm_batch_cards_register'::text, 'sdm_tap_begin'::text, 'sdm_tap_confirm'::text, 'sdm_tap_consume'::text, 'sdm_card_activate'::text, 'sdm_batch_list'::text, 'sdm_batch_export'::text, 'sdm_station_register'::text, 'sdm_station_list'::text, 'sdm_station_retire'::text, 'card_step_up_begin'::text, 'card_step_up_complete'::text, 'card_step_up_claim'::text, 'sdm_card_revoke'::text, 'pake_setup_register'::text, 'pake_register'::text, 'pake_signup_register'::text, 'pake_unregister'::text, 'pake_login'::text, 'passkey_attestation_record'::text, 'recovery_v4_begin'::text, 'recovery_v4_confirm'::text, 'recovery_v4_commit'::text, 'recovery_v4_abort'::text, 'recovery_v4_remove'::text, 'recovery_v4_expire'::text, 'recovery_v4_replay'::text, 'recovery_v4_compromise'::text, 'recovery_v4_server_share'::text, 'anon_host_key_init'::text, 'anon_host_key_advance'::text, 'anon_host_key_retire'::text, 'anon_host_state_read'::text, 'anon_booking_record'::text, 'anon_booking_check'::text, 'anon_pseudonym_invalidate'::text, 'anon_capacity_open'::text, 'anon_ledger_read'::text, 'anon_host_purge'::text, 'anon_host_merge'::text, 'anon_device_register'::text, 'anon_device_revoke'::text, 'anon_device_list'::text, 'profile_field_key_register'::text])))"
         },
         {
           "name": "audit_logs_entry_hash_key",
@@ -31103,6 +31515,113 @@
       ],
       "triggers": [
         "CREATE TRIGGER passkey_attestations_guard BEFORE UPDATE ON vault_enclave.passkey_attestations FOR EACH ROW EXECUTE FUNCTION vault_enclave.passkey_attestations_guard()"
+      ],
+      "rls": true,
+      "forceRls": false,
+      "policies": [],
+      "grants": {}
+    },
+    {
+      "schema": "vault_enclave",
+      "name": "profile_field_keys",
+      "columns": [
+        {
+          "name": "version",
+          "type": "smallint",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "kid",
+          "type": "bytea",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "wrapped_key",
+          "type": "bytea",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "kek_id",
+          "type": "bytea",
+          "notNull": true,
+          "default": null,
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "notNull": true,
+          "default": "clock_timestamp()",
+          "identity": null,
+          "generated": null
+        },
+        {
+          "name": "retired_at",
+          "type": "timestamp with time zone",
+          "notNull": false,
+          "default": null,
+          "identity": null,
+          "generated": null
+        }
+      ],
+      "constraints": [
+        {
+          "name": "profile_field_keys_kek_len",
+          "kind": "c",
+          "def": "CHECK ((octet_length(kek_id) = 16))"
+        },
+        {
+          "name": "profile_field_keys_kid_len",
+          "kind": "c",
+          "def": "CHECK ((octet_length(kid) = 16))"
+        },
+        {
+          "name": "profile_field_keys_kid_unique",
+          "kind": "u",
+          "def": "UNIQUE (kid)"
+        },
+        {
+          "name": "profile_field_keys_pkey",
+          "kind": "p",
+          "def": "PRIMARY KEY (version)"
+        },
+        {
+          "name": "profile_field_keys_version_range",
+          "kind": "c",
+          "def": "CHECK (((version >= 1) AND (version <= 255)))"
+        },
+        {
+          "name": "profile_field_keys_wrap_kek",
+          "kind": "c",
+          "def": "CHECK ((SUBSTRING(wrapped_key FROM 5 FOR 16) = kek_id))"
+        },
+        {
+          "name": "profile_field_keys_wrap_len",
+          "kind": "c",
+          "def": "CHECK ((octet_length(wrapped_key) = 80))"
+        },
+        {
+          "name": "profile_field_keys_wrap_magic",
+          "kind": "c",
+          "def": "CHECK ((SUBSTRING(wrapped_key FROM 1 FOR 4) = '\\x52464b31'::bytea))"
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX profile_field_keys_one_active ON vault_enclave.profile_field_keys USING btree ((true)) WHERE (retired_at IS NULL)"
+      ],
+      "triggers": [
+        "CREATE TRIGGER profile_field_keys_guard BEFORE DELETE OR UPDATE ON vault_enclave.profile_field_keys FOR EACH ROW EXECUTE FUNCTION vault_enclave.profile_field_keys_guard()",
+        "CREATE TRIGGER profile_field_keys_no_truncate BEFORE TRUNCATE ON vault_enclave.profile_field_keys FOR EACH STATEMENT EXECUTE FUNCTION vault_enclave.audit_logs_immutable()"
       ],
       "rls": true,
       "forceRls": false,
@@ -33884,6 +34403,12 @@
     },
     {
       "schema": "public",
+      "name": "rout_kyc_attest",
+      "args": "p_provider text, p_nullifiers text[], p_anchor_kinds text[], p_is_real_human boolean, p_has_legal_identity boolean, p_jurisdiction text",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_kyc_attest(p_provider text, p_nullifiers text[], p_anchor_kinds text[], p_is_real_human boolean, p_has_legal_identity boolean, p_jurisdiction text)\n RETURNS text\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\ndeclare\n  v_user  uuid := public.rout_current_user_id();\n  v_n     integer := coalesce(pg_catalog.array_length(p_nullifiers, 1), 0);\n  v_other text;\n  v_nf    text;\nbegin\n  if v_user is null then\n    return 'no_context';\n  end if;\n  if v_n = 0 or v_n > 4 or v_n <> coalesce(pg_catalog.array_length(p_anchor_kinds, 1), 0)\n     or exists (select 1 from pg_catalog.unnest(p_nullifiers) x where x is null or x !~ '^[0-9a-f]{64}$')\n     or exists (select 1 from pg_catalog.unnest(p_anchor_kinds) k where k is null or k not in ('personal_number', 'document', 'provider_subject'))\n     or (p_jurisdiction is not null and p_jurisdiction !~ '^[A-Z]{3}$')\n     or p_provider is null or p_is_real_human is null or p_has_legal_identity is null\n     -- World ID is a zero-knowledge proof, never a KYC document; it gets its own verifier.\n     or p_provider = 'world_id' then\n    return 'invalid_input';\n  end if;\n  -- Serialise attempts on the same anchors (sorted, so two attempts never wait on each other in a cycle).\n  for v_nf in select x from pg_catalog.unnest(p_nullifiers) x order by x loop\n    perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(v_nf, 288));\n  end loop;\n  select n.provider into v_other\n    from public.verified_identity_nullifiers n\n   where n.universal_nullifier = any (p_nullifiers) and n.user_id <> v_user\n   order by n.attested_at\n   limit 1;\n  if v_other is not null then\n    return case when v_other = p_provider then 'duplicate_human' else 'identity_already_attested_across_providers' end;\n  end if;\n  insert into public.verified_identity_nullifiers\n      (universal_nullifier, user_id, provider, anchor_kind, is_real_human, has_legal_identity, jurisdiction, evidence)\n    select a.nf, v_user, p_provider, a.kind, p_is_real_human, p_has_legal_identity, p_jurisdiction, 'kyc_document'\n      from rows from (pg_catalog.unnest(p_nullifiers), pg_catalog.unnest(p_anchor_kinds)) as a(nf, kind)\n  on conflict (universal_nullifier) do nothing;\n  return 'ok';\nend\n$function$"
+    },
+    {
+      "schema": "public",
       "name": "rout_lead_capture_insert",
       "args": "p_handle text, p_name text, p_email text, p_message text",
       "def": "CREATE OR REPLACE FUNCTION public.rout_lead_capture_insert(p_handle text, p_name text, p_email text, p_message text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\ndeclare v_handle text := pg_catalog.lower(pg_catalog.btrim(coalesce(p_handle, ''))); v_id uuid;\nbegin\n  if pg_catalog.length(v_handle) not between 1 and 64\n     or coalesce(pg_catalog.length(p_name), 0) > 120\n     or p_email is null or pg_catalog.length(p_email) not between 3 and 254 or pg_catalog.strpos(p_email, '@') = 0\n     or coalesce(pg_catalog.length(p_message), 0) > 1000 then\n    raise exception 'invalid lead' using errcode = '22023';\n  end if;\n  if not exists (\n    select 1 from public.profiles p\n     cross join lateral pg_catalog.jsonb_array_elements(case when pg_catalog.jsonb_typeof(p.blocks) = 'array' then p.blocks else '[]'::jsonb end) b(el)\n     where pg_catalog.lower(p.username) = v_handle and b.el->>'kind' = 'contact_form'\n       and coalesce(b.el->'hidden', 'false'::jsonb) <> 'true'::jsonb) then\n    raise exception 'no contact form' using errcode = 'P0002';\n  end if;\n  insert into public.lead_captures (handle, name, email, message) values (v_handle, p_name, p_email, p_message)\n  returning id into v_id;\n  return v_id;\nend $function$"
@@ -34334,6 +34859,18 @@
     },
     {
       "schema": "public",
+      "name": "rout_profile_field_key_register",
+      "args": "p_kid bytea, p_wrapped_key bytea, p_kek_id bytea",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_profile_field_key_register(p_kid bytea, p_wrapped_key bytea, p_kek_id bytea)\n RETURNS boolean\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\ndeclare\n  v_caller uuid := vault_enclave.caller_user_id();\n  v_rows int;\nbegin\n  perform pg_catalog.pg_advisory_xact_lock(7421003287);\n  if exists (select 1 from vault_enclave.profile_field_keys) then\n    perform vault_enclave.append_audit(v_caller, 'profile_field_key_register', 'denied', 'ring_exists', null); return false;\n  end if;\n  begin\n    insert into vault_enclave.profile_field_keys (version, kid, wrapped_key, kek_id)\n    values (1, p_kid, p_wrapped_key, p_kek_id);\n    get diagnostics v_rows = row_count;\n  exception when check_violation or not_null_violation or unique_violation then\n    perform vault_enclave.append_audit(v_caller, 'profile_field_key_register', 'denied', 'malformed', null); return false;\n  end;\n  perform vault_enclave.append_audit(v_caller, 'profile_field_key_register', 'granted', 'ok', null);\n  return v_rows = 1;\nend $function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_profile_field_keys",
+      "args": "",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_profile_field_keys()\n RETURNS TABLE(version integer, kid bytea, wrapped_key bytea, kek_id bytea, active boolean)\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select k.version::integer, k.kid, k.wrapped_key, k.kek_id, k.retired_at is null\n    from vault_enclave.profile_field_keys k order by k.version desc\n$function$"
+    },
+    {
+      "schema": "public",
       "name": "rout_profile_notify_address",
       "args": "p_profile uuid, p_purpose text",
       "def": "CREATE OR REPLACE FUNCTION public.rout_profile_notify_address(p_profile uuid, p_purpose text)\n RETURNS text\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select coalesce(p.forwarding_email, p.email)\n    from public.profiles p\n   where p.id = p_profile\n     and p_purpose in ('booking_request', 'contact_form')\n     and pg_catalog.jsonb_typeof(p.blocks) = 'array'\n     and exists (select 1 from pg_catalog.jsonb_array_elements(p.blocks) b\n                  where b.value ->> 'kind' = p_purpose and coalesce(b.value ->> 'hidden', 'false') <> 'true')\n$function$"
@@ -34349,6 +34886,12 @@
       "name": "rout_profile_qa_level",
       "args": "p_handle text",
       "def": "CREATE OR REPLACE FUNCTION public.rout_profile_qa_level(p_handle text)\n RETURNS qa_permission_level\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select case when u.qa_permission_level <> 'public_unrestricted' then u.qa_permission_level\n              when u.date_of_birth > (current_date - interval '16 years') then 'verified_only'::public.qa_permission_level\n              else u.qa_permission_level end\n    from public.profiles p join public.users u on u.id = p.id\n   where lower(p.username) = lower(p_handle)\n   limit 1\n$function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_profile_referred_mine",
+      "args": "",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_profile_referred_mine()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select coalesce((select p.referred_by is not null from public.profiles p\n                    where p.id = public.rout_current_user_id()), false)\n$function$"
     },
     {
       "schema": "public",
@@ -34474,13 +35017,13 @@
       "schema": "public",
       "name": "rout_public_didit_member_count",
       "args": "",
-      "def": "CREATE OR REPLACE FUNCTION public.rout_public_didit_member_count()\n RETURNS integer\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select pg_catalog.count(*)::integer\n    from public.profiles p\n    left join public.identity_verifications iv on iv.user_id = p.id\n    left join public.verified_identities vi on vi.user_id = p.id\n   where p.username is not null\n     and coalesce(p.is_banned, false) = false\n     and coalesce(p.is_suspended, false) = false\n     and ((coalesce(iv.is_verified, false) and iv.verification_provider::text = 'didit')\n       or (coalesce(vi.tier_2_legal_identity, false) and vi.national_id_nullifier is not null))\n$function$"
+      "def": "CREATE OR REPLACE FUNCTION public.rout_public_didit_member_count()\n RETURNS integer\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select pg_catalog.count(*)::integer\n    from public.profiles p\n    left join public.identity_verifications iv on iv.user_id = p.id\n    left join public.verified_identities vi on vi.user_id = p.id\n   where p.username is not null\n     and coalesce(p.is_banned, false) = false\n     and coalesce(p.is_suspended, false) = false\n     and ((coalesce(iv.is_verified, false) and iv.verification_provider::text = 'didit')\n       or (coalesce(vi.tier_2_legal_identity, false) and vi.national_id_nullifier is not null)\n       or exists (select 1 from public.verified_identity_nullifiers n\n                   where n.user_id = p.id and n.evidence = 'kyc_document' and n.has_legal_identity))\n$function$"
     },
     {
       "schema": "public",
       "name": "rout_public_identity_badges",
       "args": "p_user_ids uuid[]",
-      "def": "CREATE OR REPLACE FUNCTION public.rout_public_identity_badges(p_user_ids uuid[])\n RETURNS TABLE(user_id uuid, didit_legal_identity boolean, real_human boolean)\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  with t as (\n    select p.id,\n      (coalesce(iv.is_verified, false) and iv.verification_provider::text = 'didit')\n        or (coalesce(vi.tier_2_legal_identity, false) and vi.national_id_nullifier is not null) as legal,\n      coalesce(vi.tier_1_real_human, false)\n        or (coalesce(iv.is_verified, false) and iv.verification_provider::text in ('w_identity', 'didit', 'manual')) as human\n    from public.profiles p\n    left join public.identity_verifications iv on iv.user_id = p.id\n    left join public.verified_identities vi on vi.user_id = p.id\n    where p.id = any (coalesce(p_user_ids[1:200], '{}'::uuid[]))\n  )\n  select t.id, t.legal, t.legal or t.human from t\n$function$"
+      "def": "CREATE OR REPLACE FUNCTION public.rout_public_identity_badges(p_user_ids uuid[])\n RETURNS TABLE(user_id uuid, didit_legal_identity boolean, real_human boolean)\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  with t as (\n    select p.id,\n      (coalesce(iv.is_verified, false) and iv.verification_provider::text = 'didit')\n        or (coalesce(vi.tier_2_legal_identity, false) and vi.national_id_nullifier is not null)\n        or exists (select 1 from public.verified_identity_nullifiers n\n                    where n.user_id = p.id and n.evidence = 'kyc_document' and n.has_legal_identity) as legal,\n      exists (select 1 from public.verified_identity_nullifiers n\n               where n.user_id = p.id and n.evidence = 'zk_proof' and n.is_real_human) as human\n    from public.profiles p\n    left join public.identity_verifications iv on iv.user_id = p.id\n    left join public.verified_identities vi on vi.user_id = p.id\n    where p.id = any (coalesce(p_user_ids[1:200], '{}'::uuid[]))\n  )\n  select t.id, t.legal, t.human from t\n$function$"
     },
     {
       "schema": "public",
@@ -34757,6 +35300,12 @@
       "name": "rout_reviewer_admin_id",
       "args": "",
       "def": "CREATE OR REPLACE FUNCTION public.rout_reviewer_admin_id()\n RETURNS uuid\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select r.user_id from public.user_roles r where r.role::text = 'admin' order by r.user_id limit 1\n$function$"
+    },
+    {
+      "schema": "public",
+      "name": "rout_rpf1_shape_ok",
+      "args": "p bytea",
+      "def": "CREATE OR REPLACE FUNCTION public.rout_rpf1_shape_ok(p bytea)\n RETURNS boolean\n LANGUAGE sql\n IMMUTABLE\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\n  select p is null or (\n    pg_catalog.octet_length(p) between 109 and 4205\n    and (pg_catalog.octet_length(p) - 45) % 64 = 0\n    and substring(p from 1 for 4) = '\\x52504631'::bytea\n    and pg_catalog.get_byte(p, 4) >= 1)\n$function$"
     },
     {
       "schema": "public",
@@ -35759,6 +36308,12 @@
       "name": "pow_leading_zero_bits",
       "args": "p bytea",
       "def": "CREATE OR REPLACE FUNCTION vault_enclave.pow_leading_zero_bits(p bytea)\n RETURNS integer\n LANGUAGE plpgsql\n IMMUTABLE STRICT\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\ndeclare\n  i integer;\n  b integer;\n  n integer := 0;\nbegin\n  for i in 0 .. pg_catalog.octet_length(p) - 1 loop\n    b := pg_catalog.get_byte(p, i);\n    if b = 0 then n := n + 8; continue; end if;\n    while b < 128 loop b := b * 2; n := n + 1; end loop;\n    return n;\n  end loop;\n  return n;\nend $function$"
+    },
+    {
+      "schema": "vault_enclave",
+      "name": "profile_field_keys_guard",
+      "args": "",
+      "def": "CREATE OR REPLACE FUNCTION vault_enclave.profile_field_keys_guard()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'pg_temp'\nAS $function$\nbegin\n  if tg_op = 'DELETE' then raise exception 'vault_enclave.profile_field_keys is append-only'; end if;\n  if old.retired_at is not null or new.retired_at is null\n     or (new.version, new.kid, new.wrapped_key, new.kek_id, new.created_at)\n        is distinct from (old.version, old.kid, old.wrapped_key, old.kek_id, old.created_at) then\n    raise exception 'vault_enclave.profile_field_keys rows can only be retired once';\n  end if;\n  return new;\nend $function$"
     },
     {
       "schema": "vault_enclave",

@@ -76,6 +76,19 @@ export const KNOWN_OPEN: ReadonlyArray<{ id: string; reason: string }> = [
 ];
 
 /**
+ * Findings db/0287 (A1 EXPAND, live on Neon since 2026-11-17) opened on the current snapshot. Still
+ * open: they close only when the A1 CONTRACT reads these columns through own-row/admin definers.
+ * Kept apart from KNOWN_OPEN so the replay tests of earlier stages stay exact.
+ */
+export const OPENED_BY_0287: ReadonlyArray<{ id: string; reason: string }> = [
+  { id: "rls:public.profiles:SELECT:using", reason: "F1-A1 db/0287 grants rout_app SELECT on the 11 *_sealed and 5 *_bidx columns, so the public-read policy hands every member's ciphertext and blind indexes to rout_app. Ciphertext opens only with ROUT_VAULT_KEK (server env, never in SQL); blind indexes still show which profiles share a value. Close by reading them through own-row/admin definers before the A1 CONTRACT" },
+  { id: "oracle:profiles(stripe_account_id_bidx)", reason: `F6-A1 keyed index of the same Stripe account id as profiles(stripe_account_id); ${ORACLE_OPEN}` },
+  { id: "oracle:profiles(forwarding_email_token_bidx)", reason: `F6-A1 keyed index of the forwarding token; ${ORACLE_OPEN}` },
+];
+/** Reviewed exception that cannot apply while OPENED_BY_0287 is open (profiles is no longer declassified). */
+export const SUPERSEDED_BY_0287: ReadonlyArray<string> = ["declassified:public.profiles:SELECT"];
+
+/**
  * Unique keys without a tenant column on tables rout_app can write, reviewed
  * one by one. "secret": the value is a hash or random token, so guessing it is
  * infeasible. "public": the value is public by design and an availability

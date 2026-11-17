@@ -9,7 +9,7 @@
  *            nullifiers -> Neon -> anchors zero-filled
  *   status   none | pending | verified, from Neon only
  *
- * Stored: the nullifier (identity_verifications.unique_human_id, and with db-pending/0288 one row
+ * Stored: the nullifier (identity_verifications.unique_human_id, and with db/0288 one row
  * per anchor in verified_identity_nullifiers), provider, is_real_human, jurisdiction. Never stored
  * or logged: names, document or personal numbers, dates, images, the decision body.
  * Raw webhook bytes, decision bytes, canonical anchors and the pepper copy are Node.js Buffers
