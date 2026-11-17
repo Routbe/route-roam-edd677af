@@ -338,7 +338,7 @@
 - [x] A1: application-level AEAD encryption (RPF1, XChaCha20-Poly1305) + blind HMAC-BLAKE3 indexes; keys wrapped under ROUT_VAULT_KEK
 - [ ] A1 round 2 (owner chose: all private fields now): move readers/writers of email, forwarding email + token, legal names, last city/country, then add them to BACKFILL_FIELDS; admin email search becomes exact match
 - [x] A1: read/write paths for VAT, Stripe account, payment method, moderation reason/moderator, export and referral moved; fast-check suites green
-- [ ] A1: EXPAND 0287 + rollback + backfill script prepared in db-pending (not applied) — waits for "GO A1"
+- [x] A1: EXPAND 0287 live on Neon (2026-11-17 14:48 UTC, owner GO); rollback stays in db-pending
 - [ ] Device key register (workspace_member_device_keys) + per-device HPKE envelopes (workspace_member_envelopes) — owner chose RFC 9180 HPKE with X-Wing (ML-KEM-768 + X25519) as KEM
 - [ ] Automatic epoch rotation when a manager role is revoked
 - [ ] /w/:slug/ask seals against the active epoch key; managers decrypt only through their registered device envelopes
@@ -350,7 +350,7 @@
 - [x] Universal nullifier pipeline (canonical ICAO/eIDAS anchors, Poseidon256 + BLAKE3 + pepper) with fast-check tests
 - [x] Didit v3 engine: session, signed webhook, status endpoint, verification modal; no names or numbers stored
 - [x] db-pending/0288 (cross-provider nullifier table + rout_kyc_attest) written and tested offline
-- [ ] Apply 0288 on Neon — waits for the owner's literal GO
+- [x] 0288 live on Neon (2026-11-17 14:49 UTC, owner GO)
 - [ ] Set DIDIT_API_KEY, DIDIT_WEBHOOK_SECRET, DIDIT_WORKFLOW_ID, IDENTITY_HASH_PEPPER or PEPPER_SECRET on the owner's host and register the webhook URL at Didit — owner
 - [ ] Other providers in the hub (itsme, DigiD, eID, France Identité, MitID, CIE, IDnow, Shufti Pro, Trulioo, World ID) — each needs a contract and keys from the owner
 - [x] Green "Real Human" shield only from zero-knowledge proofs; blue "KYC Attested" shield for Didit/eIDAS (owner decision 2026-11-17 13:45)
@@ -358,7 +358,7 @@
 
 ## Owner directive 2026-11-17 13:45 UTC — 0287 + 0288 rollout, badge split, zeroization
 - [x] 0287 + 0288 prepared on an offline replay; checksums pinned in db-pending/ROLLOUT-0287-0288.md; Neon history verified read-only (0 deviations)
-- [ ] Apply 0287 then 0288 on Neon — waits for the owner's literal GO per file
+- [x] 0287 then 0288 applied on Neon (owner GO, one transaction each)
 - [x] Blue "KYC Attested" shield, green "Real Human" only from zero-knowledge proofs, supporter crown separate
 - [x] Webhook/decision bytes and anchors in Node.js Buffers, fill(0) right after the nullifier; PEPPER_SECRET accepted
 - [ ] Zero-knowledge humanity verifier that writes `zk_proof` rows — needs a chosen proof system/provider (owner)
@@ -366,6 +366,16 @@
 
 ## Verificatie & uitrol (2026-11-17)
 - [x] /verify herontworpen: "Geverifieerd profiel", zwarte knop, compacte zoekbalk + scrollbare chips, alleen Didit/W Identity als actieve kaarten, overige providers in "Toekomstige integraties"
-- [ ] 0287 + 0288 op Neon uitvoeren (GO gegeven) — wacht op MIGRATION_URL: niet aanwezig in deze omgeving, eigenaar draait migration-rollout.ts zelf
-- [ ] Daarna alleen-lezen controleren dat Neon op 0288 staat; pas dan HANDOVER.md-bijlage en dit bestand op "live"
+- [x] 0287 + 0288 live op Neon (17-11-2026 14:48 en 14:49 UTC) via migration-rollout.ts --apply
+- [x] Alleen-lezen gecontroleerd: 282 rijen, 0288 laatste, controlegetallen gelijk, geschiedenis- en definer-controle 0 afwijkingen, schema-snapshot gelijk aan Neon
 - [ ] Volgende taken (in volgorde): sessies 90 dagen + bevestigen met passkey; time-outcontrole Studio-profiel ("15 seconden"-melding)
+
+## Opdracht eigenaar 2026-11-17 14:47 UTC — live 0288, logo's, sessies
+- [x] 0287 + 0288 live, CODE_SCHEMA_LEVEL 0288, tests volgen de vrijgegeven bestanden
+- [ ] Wachtwoord van neondb_owner in Neon vernieuwen (stond in de chat) — eigenaar
+- [ ] Productie opnieuw uitrollen zodat de health-probe 0288 meldt — eigenaar
+- [ ] ROUT_VAULT_KEK op de eigen server, daarna `bun scripts/a1-backfill.ts` (proef) en `--apply` — eigenaar
+- [ ] Merklogo's in de verificatiehub: lokaal opgeslagen, geen externe verzoeken, `<ProviderLogo>` met Building2-terugval
+- [ ] 3000 ms time-outbewaking voor inloggen/profiel met `auth_timeout_circuit_open`
+- [ ] Sessies 90 dagen glijdend + vernieuwingstokens met familie-intrekking
+

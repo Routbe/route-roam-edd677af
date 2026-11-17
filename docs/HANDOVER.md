@@ -924,3 +924,10 @@ On the owner's decision the held-back booking ledger is now `db-pending/0284_boo
 - Zeroization: webhook body and Didit responses are read into Node.js Buffers and zero-filled; canonical anchors are unpooled Buffers zero-filled with fill(0) right after the nullifiers are computed, before any database call. JSON.parse strings cannot be wiped in JavaScript.
 - Pepper: IDENTITY_HASH_PEPPER or PEPPER_SECRET; both set and different means "not configured".
 - Found, not changed: 8 foreign keys in `vault_enclave` without an index, on Neon and in the replay (0286 covered `public` only).
+
+### Appendix — 2026-11-17 14:49 UTC: 0287 + 0288 live on Neon (owner GO)
+- Owner GO for 0287 (`e5627eb7…14cb5d1`) and 0288 (`ef92f58e…3e02cfed`). Both files moved from db-pending/ to db/ unchanged (SHA-256 re-checked) and applied with `scripts/migration-rollout.ts --apply` over MIGRATION_URL (owner login): 0287 at 14:48:56 UTC, 0288 at 14:49:00 UTC, each in one transaction with the in-transaction checksum check, predecessor check and definer guard. Rollbacks stay in db-pending/.
+- Read back (read-only): 282 rows in `public.schema_migrations`, both rows with exactly the file checksums; `vault_enclave.profile_field_keys` and `public.verified_identity_nullifiers` exist (0 rows), 16 `*_sealed`/`*_bidx` columns on `profiles`; `rout_kyc_attest`, `rout_public_identity_badges`, `rout_public_didit_member_count` are SECURITY DEFINER on `pg_catalog, pg_temp`. `migration-history-check.ts` and `security-definer-check.ts` (478 definers): 0 deviations. `schema-snapshot.ts --check`: live matches db/schema.snapshot.json.
+- CODE_SCHEMA_LEVEL is now 0288. Production still runs older code until the owner redeploys; 0287/0288 are EXPAND, so that code keeps working.
+- Still open after 0287: ROUT_VAULT_KEK on the owner's host, then `bun scripts/a1-backfill.ts` (dry run) and `--apply`. After 0288: Didit keys, pepper and the webhook URL. The green shield stays empty until a zero-knowledge verifier writes `zk_proof` rows.
+- The owner login's password was shared in the chat for this run; it should be rotated in Neon.
