@@ -1728,6 +1728,22 @@ export interface PublicProfilesRow {
   "workspace_id": string | null;
   "is_early_verified": boolean;
   "early_believer_at": string | Date | null;
+  "business_vat_sealed": Uint8Array | null;
+  "stripe_account_id_sealed": Uint8Array | null;
+  "payment_method_sealed": Uint8Array | null;
+  "moderation_reason_sealed": Uint8Array | null;
+  "moderated_by_sealed": Uint8Array | null;
+  "email_sealed": Uint8Array | null;
+  "forwarding_email_sealed": Uint8Array | null;
+  "legal_first_name_sealed": Uint8Array | null;
+  "legal_last_name_sealed": Uint8Array | null;
+  "last_city_sealed": Uint8Array | null;
+  "last_country_sealed": Uint8Array | null;
+  "business_vat_bidx": Uint8Array | null;
+  "stripe_account_id_bidx": Uint8Array | null;
+  "email_bidx": Uint8Array | null;
+  "forwarding_email_bidx": Uint8Array | null;
+  "forwarding_email_token_bidx": Uint8Array | null;
 }
 
 export interface PublicPromoCodeEventsRow {
@@ -2434,6 +2450,18 @@ export interface PublicVerifiedIdentitiesRow {
   "legal_name": string | null;
 }
 
+export interface PublicVerifiedIdentityNullifiersRow {
+  "universal_nullifier": string;
+  "user_id": string;
+  "provider": string;
+  "anchor_kind": string;
+  "is_real_human": boolean;
+  "has_legal_identity": boolean;
+  "jurisdiction": string | null;
+  "evidence": string;
+  "attested_at": string | Date;
+}
+
 export interface PublicWalletPassesRow {
   "object_id": string;
   "user_id": string;
@@ -2674,9 +2702,9 @@ export interface PublicWorkspacesRow {
   "description": string | null;
   "category": string | null;
   "public_profile": JsonValue;
+  "icon": string | null;
   "bluesky_did": string | null;
   "bluesky_handle": string | null;
-  "icon": string | null;
   "encrypted_config": string | null;
   "encrypted_config_key_id": string | null;
 }
@@ -2900,6 +2928,7 @@ export interface DbTables {
   "public.users": PublicUsersRow;
   "public.verification_payments": PublicVerificationPaymentsRow;
   "public.verified_identities": PublicVerifiedIdentitiesRow;
+  "public.verified_identity_nullifiers": PublicVerifiedIdentityNullifiersRow;
   "public.wallet_passes": PublicWalletPassesRow;
   "public.wallet_transactions": PublicWalletTransactionsRow;
   "public.wallets": PublicWalletsRow;
