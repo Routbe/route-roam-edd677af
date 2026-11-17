@@ -1,6 +1,6 @@
 // @vitest-environment node
 /**
- * db-pending/0289 on an offline replay of db/ (which ends at 0288, as Neon does). Never touches Neon.
+ * db/0289 (live on Neon since 2026-11-17) on an offline replay of db/ up to 0288. Never touches Neon.
  * Proves: with 0287 in place the merge executor cannot run 0287's shape check (so every merge
  * fails); 0289 grants exactly that function and adds the nullifier merge guard right after the
  * verified_identities guard; it is idempotent; the rollback removes both again.
@@ -9,7 +9,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { applyPending, replayDb, ROOT } from "../../scripts/formal-rls/replay";
+import { applyReleased, replayDb, ROOT } from "../../scripts/formal-rls/replay";
 
 const FILE = "0289_merge_after_field_encryption.sql";
 let db: PGlite;
@@ -18,7 +18,7 @@ const canRun = async () =>
 const def = async () =>
   (await db.query<{ d: string }>("select pg_get_functiondef('public.execute_account_merge(text,text,text,text)'::regprocedure) as d")).rows[0]!.d;
 
-beforeAll(async () => { db = await replayDb(); }, 600_000);
+beforeAll(async () => { db = await replayDb((f) => f < "0289"); }, 600_000);
 afterAll(async () => { await db?.close(); });
 
 describe("0289 account merge after field encryption", () => {
@@ -28,7 +28,7 @@ describe("0289 account merge after field encryption", () => {
   });
 
   it("grants the shape check and guards nullifier rows right after verified_identities", async () => {
-    await applyPending(db, FILE);
+    await applyReleased(db, FILE);
     expect(await canRun()).toBe(true);
     const d = await def();
     const at = d.indexOf("'merge_blocked:verified_identities'");
@@ -43,7 +43,7 @@ describe("0289 account merge after field encryption", () => {
 
   it("is idempotent", async () => {
     const before = await def();
-    await applyPending(db, FILE);
+    await applyReleased(db, FILE);
     expect(await def()).toBe(before);
   });
 
