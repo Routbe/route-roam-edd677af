@@ -62,6 +62,16 @@ describe("combined rollout 0287 -> 0288 (offline)", () => {
   }, 600_000);
   afterAll(async () => db?.close());
 
+  let fksBefore: string[] = [];
+  const unindexedFks = async () =>
+    (await db.query<{ fk: string }>(`
+      select c.conrelid::regclass::text || '.' || c.conname as fk from pg_constraint c
+       where c.contype = 'f' and c.connamespace in ('public'::regnamespace, 'vault_enclave'::regnamespace)
+         and not exists (select 1 from pg_index i where i.indrelid = c.conrelid
+               and (i.indkey::int2[])[0:cardinality(c.conkey) - 1] @> c.conkey
+               and c.conkey @> (i.indkey::int2[])[0:cardinality(c.conkey) - 1])
+       order by 1`)).rows.map((r) => r.fk);
+
   it("the notes pin the exact SHA-256 of both files and their rollbacks", () => {
     for (const f of [F0287, F0288, "0287_profile_field_encryption_rollback.sql", "0288_universal_identity_nullifiers_rollback.sql"]) {
       const sums = pinned(f);
@@ -71,7 +81,8 @@ describe("combined rollout 0287 -> 0288 (offline)", () => {
     expect(NOTES).toContain(`\`${checksumOf(readFileSync(join(DB, F0286), "utf8"))}\``);
   });
 
-  it("db/ ends at 0286, so 0287 and 0288 are the next two files", () => {
+  it("db/ ends at 0286, so 0287 and 0288 are the next two files", async () => {
+    fksBefore = await unindexedFks();
     expect(listMigrationFiles(DB).at(-1)).toBe(F0286);
   });
 
@@ -94,19 +105,16 @@ describe("combined rollout 0287 -> 0288 (offline)", () => {
     await expect(run(rolloutBatch(F0287, F0286, body(F0287)))).rejects.toThrow(/already applied/);
   });
 
-  it("leaves every SECURITY DEFINER on pg_catalog, pg_temp and no foreign key unindexed", async () => {
+  it("leaves every SECURITY DEFINER on pg_catalog, pg_temp and add no unindexed foreign key", async () => {
     const bad = await db.query<{ f: string }>(`
       select p.oid::regprocedure::text as f from pg_proc p
        where p.prosecdef and p.pronamespace in ('public'::regnamespace, 'vault_enclave'::regnamespace)
          and not (coalesce(p.proconfig, '{}') @> array['search_path=pg_catalog, pg_temp'])`);
     expect(bad.rows.map((r) => r.f)).toEqual([]);
-    const fk = await db.query<{ fk: string }>(`
-      select c.conrelid::regclass::text || '.' || c.conname as fk from pg_constraint c
-       where c.contype = 'f' and c.connamespace in ('public'::regnamespace, 'vault_enclave'::regnamespace)
-         and not exists (select 1 from pg_index i where i.indrelid = c.conrelid
-               and (i.indkey::int2[])[0:cardinality(c.conkey) - 1] @> c.conkey
-               and c.conkey @> (i.indkey::int2[])[0:cardinality(c.conkey) - 1])`);
-    expect(fk.rows.map((r) => r.fk)).toEqual([]);
+    const after = await unindexedFks();
+    // public: none at all (0286). vault_enclave: 0287/0288 add none; the older ones are listed in the notes.
+    expect(after.filter((f) => f.startsWith("public."))).toEqual([]);
+    expect(after).toEqual(fksBefore);
   });
 
   it("both markers the app detects exist afterwards", async () => {
