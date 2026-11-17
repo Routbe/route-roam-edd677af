@@ -36,7 +36,9 @@ describe("0289 account merge after field encryption", () => {
     expect(at).toBeGreaterThan(0);
     expect(guard).toBeGreaterThan(at);
     expect(d).toContain('select 1 from public."verified_identity_nullifiers" where "user_id" = v_secondary');
-    expect((await db.query<{ r: boolean }>("select pg_has_role(current_user, 'rout_merge_executor', 'MEMBER') as r")).rows[0]!.r).toBe(false);
+    // The temporary membership of the migrating role is revoked again.
+    const m = await db.query("select 1 from pg_auth_members where roleid = 'rout_merge_executor'::regrole and member = (select oid from pg_roles where rolname = current_user)");
+    expect(m.rows).toEqual([]);
   });
 
   it("is idempotent", async () => {
