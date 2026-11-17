@@ -63,12 +63,17 @@ end $guard$`;
 /** Dates and timestamps stay strings, as the app has always received them. */
 const TEXT_TYPES = [1082, 1083, 1114, 1184, 1266];
 let pool: { url: string; client: postgres.Sql } | null = null;
+export const jsonText = (v: unknown): string => (typeof v === "string" ? v : JSON.stringify(v));
 function client(connectionString: string): postgres.Sql {
   if (pool?.url === connectionString) return pool.client;
   void pool?.client.end({ timeout: 5 });
-  const types = Object.fromEntries(TEXT_TYPES.map((oid) => [`t${oid}`, {
+  const types: Record<string, unknown> = Object.fromEntries(TEXT_TYPES.map((oid) => [`t${oid}`, {
     to: oid, from: [oid], serialize: (v: unknown) => String(v), parse: (v: string) => v,
   }]));
+  // A string bound to a json(b) parameter already is JSON text (normaliseParams
+  // and every caller use JSON.stringify); the driver's default would encode it a
+  // second time into a JSON string. Same result as an untyped (unknown) parameter.
+  types.json = { to: 3802, from: [114, 3802], serialize: jsonText, parse: (v: string) => JSON.parse(v) };
   const created = postgres(connectionString, {
     ssl: "require", // TLS is mandatory whatever the URL says
     max: Number(process.env["DATABASE_POOL_MAX"] ?? 10),
@@ -76,7 +81,7 @@ function client(connectionString: string): postgres.Sql {
     connect_timeout: 15,
     prepare: false, // safe behind PgBouncer / Neon's pooler
     onnotice: () => {},
-    types,
+    types: types as never,
   });
   pool = { url: connectionString, client: created };
   return created;
