@@ -48,7 +48,7 @@ export default function VerifyGuide() {
   );
 
   async function go(engine: ProviderEngine) {
-    if (!user) return void navigate({ to: "/auth/sign-in" });
+    if (!user) return void navigate("/auth/sign-in");
     if (engine === "didit") return setDiditOpen(true);
     setBusy(engine);
     try {
