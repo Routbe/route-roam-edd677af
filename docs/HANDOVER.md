@@ -931,3 +931,7 @@ On the owner's decision the held-back booking ledger is now `db-pending/0284_boo
 - CODE_SCHEMA_LEVEL is now 0288. Production still runs older code until the owner redeploys; 0287/0288 are EXPAND, so that code keeps working.
 - Still open after 0287: ROUT_VAULT_KEK on the owner's host, then `bun scripts/a1-backfill.ts` (dry run) and `--apply`. After 0288: Didit keys, pepper and the webhook URL. The green shield stays empty until a zero-knowledge verifier writes `zk_proof` rows.
 - The owner login's password was shared in the chat for this run; it should be rotated in Neon.
+
+### Appendix — 2026-11-17 15:00 UTC: session lifetime 90 days, provider logos
+- Better Auth sessions now last 90 days and slide: a request on a session older than 24 hours moves its end 90 days forward (src/lib/auth/session-policy.ts, tested). Cookie attributes are unchanged (HttpOnly, Secure, SameSite=Lax); Strict and refresh-token families are open owner decisions.
+- The verification hub draws provider marks only through `ProviderLogo` (src/components/icons/providers): Didit and W Identity inline from their own vector paths, the other marks as files in public/logos copied from each provider's own site; eID / eIDAS has no single official mark and shows the neutral Building2 icon. A browser check on /verify recorded 0 requests to other hosts.
