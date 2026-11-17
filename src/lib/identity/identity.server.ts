@@ -1,12 +1,13 @@
 import { sql } from "@/lib/neon";
 import { DIDIT_MONTHLY_LIMIT, normalizeRealName, type IdentityProvider } from "./identity-rules";
 import { isLegalProvider, verificationDecision } from "./identity-tiers";
+import { readPepper } from "@/lib/kyc/pepper.server";
 
-/** Server-side pepper; ruwe provider-ID's worden nooit opgeslagen. */
+/** Server-side pepper (IDENTITY_HASH_PEPPER or PEPPER_SECRET); ruwe provider-ID's worden nooit opgeslagen. */
 function pepper(): string {
-  const p = process.env["IDENTITY_HASH_PEPPER"];
-  if (!p) throw new Error("identity_not_configured");
-  return p;
+  const p = readPepper();
+  if (!p.ok) throw new Error("identity_not_configured");
+  return p.pepper;
 }
 
 export async function hashHumanId(provider: IdentityProvider, rawId: string): Promise<string> {
@@ -17,7 +18,7 @@ export async function hashHumanId(provider: IdentityProvider, rawId: string): Pr
 }
 
 export function providerConfigured(provider: IdentityProvider): boolean {
-  if (!process.env["IDENTITY_HASH_PEPPER"]) return false;
+  if (!readPepper().ok) return false;
   if (provider === "w_identity")
     return Boolean(process.env["W_IDENTITY_ISSUER"] && process.env["W_IDENTITY_CLIENT_ID"] && process.env["W_IDENTITY_CLIENT_SECRET"]);
   if (provider === "didit")
