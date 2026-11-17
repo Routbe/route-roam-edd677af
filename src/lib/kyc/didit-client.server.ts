@@ -2,7 +2,11 @@
  * Didit v3 REST client (server-only). DIDIT_API_KEY and DIDIT_WORKFLOW_ID are read per call and
  * never leave this module; responses are reduced to the fields the engine needs.
  */
+import { Buffer } from "node:buffer";
+
 const BASE = "https://verification.didit.me";
+/** Upper bound for a Didit JSON response; a decision with image URLs stays far below it. */
+const MAX_RESPONSE = 2 * 1024 * 1024;
 const TIMEOUT_MS = 15_000;
 
 export class DiditError extends Error {
@@ -37,7 +41,22 @@ async function call(path: string, init: RequestInit): Promise<unknown> {
     await res.body?.cancel().catch(() => undefined);
     throw new DiditError("provider_error", res.status);
   }
-  return res.json();
+  // Read into a Buffer (not res.json()), so the response bytes can be zero-filled after parsing.
+  const declared = Number(res.headers.get("content-length") ?? "0");
+  if (declared > MAX_RESPONSE) {
+    await res.body?.cancel().catch(() => undefined);
+    throw new DiditError("provider_error", res.status);
+  }
+  const bytes = Buffer.from(await res.arrayBuffer());
+  try {
+    if (bytes.length > MAX_RESPONSE) throw new DiditError("provider_error", res.status);
+    return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)) as unknown;
+  } catch (e) {
+    if (e instanceof DiditError) throw e;
+    throw new DiditError("provider_error", res.status);
+  } finally {
+    bytes.fill(0);
+  }
 }
 
 export async function createDiditSession(input: { vendorData: string; callback: string }): Promise<{ sessionId: string; sessionToken: string; url: string }> {
