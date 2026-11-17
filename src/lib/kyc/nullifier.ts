@@ -38,7 +38,9 @@ export function universalNullifier(canonical: Uint8Array, pepper: string): strin
   try {
     msg.set(p, 0);
     msg.set(k, p.length);
-    digest = blake3(msg);
+    // A plain Uint8Array view over the same memory: hash libraries check the exact class, and the
+    // view shares the Buffer's bytes, so wiping msg wipes what was hashed.
+    digest = blake3(new Uint8Array(msg.buffer, msg.byteOffset, msg.byteLength));
     return hex(digest);
   } finally {
     wipe(p, k, msg, digest);
