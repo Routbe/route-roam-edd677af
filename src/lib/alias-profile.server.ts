@@ -1,5 +1,4 @@
 import { hasProfilePro } from "./profile-entitlements";
-import { tiersFor } from "./identity/identity-tiers";
 import { sql } from "@/lib/neon";
 import { isReservedHandle, normalizeHandle } from "@/lib/profile";
 import { normalizeHandleForStorage } from "@/lib/handle-rules";
