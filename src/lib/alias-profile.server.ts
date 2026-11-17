@@ -200,8 +200,9 @@ export async function readPublicAliasProfile(rawHandle: string) {
     is_pro: hasProfilePro({ verified: row["owner_verified"], is_paid: row["owner_is_paid"], tier: row["owner_tier"] }),
     // Het blauwe vinkje blijft bij het rootprofiel; het aliasprofiel toont het
     // mens-symbool wanneer het gekoppelde account geverifieerd is.
-    // Only a passed identity check unlocks the discrete "Real Human" badge; a payment never does.
-    human_linked: ownerIdentity.realHuman || tiersFor([{ provider: (row["owner_identity_provider"] as string | null) ?? null, verified: row["owner_identity_verified"] === true }]).tier1RealHuman,
+    // Only a zero-knowledge humanity proof unlocks the green "Real Human" shield; KYC, W Identity
+    // or a payment never does (owner directive 2026-11-17).
+    human_linked: ownerIdentity.realHuman,
     verified_at: (row["owner_verified_at"] as string | null) ?? null,
     verified_legal_name: null,
     is_early_believer: false,
