@@ -112,6 +112,4 @@ use the editor.
 <!-- AGENT-MEMORY:BEGIN -->
 ## One-file migration rollout
 - A GO for a single migration is applied with scripts/migration-rollout.ts --apply: the exact db/ file text travels as one parameter, runs only if its SHA-256 equals the file checksum and its predecessor is recorded, and is recorded with the definer guard in the same transaction (dry run: src/test/migration-rollout.test.ts). Why: a retyped or hand-split file must never diverge from db/.
-## Function region
-- Vercel functions are pinned to the Neon database's region (VERCEL_FUNCTION_REGION in scripts/nitro-target.ts). Why: each app query is a multi-round-trip transaction, so a function on another continent pushed Studio loads past the browser timeout.
 <!-- AGENT-MEMORY:END -->
