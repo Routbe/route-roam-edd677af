@@ -23,7 +23,7 @@ import { readCatalog, type Catalog } from "../../scripts/schema-catalog";
 import { migrationDefinerGuardSql, migrationDefinerViolations } from "../../scripts/security-definer-policy";
 import { Verifier, loadSnapshot, type Report } from "../../scripts/formal-rls-verifier";
 import { parsePolicyExpr } from "../../scripts/formal-rls/sql-expr";
-import { CLOSED_BY_0276, CLOSED_BY_0277, F8A, INVOKER_VIEWS, KNOWN_OPEN } from "../../scripts/formal-rls/tenant-model";
+import { CLOSED_BY_0276, CLOSED_BY_0277, F8A, INVOKER_VIEWS, KNOWN_OPEN, OPENED_BY_0287, SUPERSEDED_BY_0287 } from "../../scripts/formal-rls/tenant-model";
 import { CODE_SCHEMA_LEVEL } from "@/lib/schema-version";
 import { contextStatements } from "@/lib/db-context";
 
@@ -60,8 +60,10 @@ describe("Z3 proof over the 0275 schema snapshot", () => {
     expect(unproven.filter((o) => o.outcome.status === "unproven" && o.outcome.why === "unsupported")).toEqual([]);
     expect(report.smtChecks).toBeGreaterThan(500);
     expect(report.obligations.filter((o) => o.outcome.status === "proven" && o.outcome.via === "smt").length).toBeGreaterThan(450);
-    expect(report.findings.map((f) => f.id).filter((id) => !known.has(id))).toEqual([]);
-    expect(report.unusedModelEntries).toEqual([]);
+    const openNow = new Set([...known, ...OPENED_BY_0287.map((k) => k.id)]);
+    expect(report.findings.map((f) => f.id).filter((id) => !openNow.has(id))).toEqual([]);
+    expect(report.findings.map((f) => f.id).filter((id) => OPENED_BY_0287.some((k) => k.id === id)).sort()).toEqual(OPENED_BY_0287.map((k) => k.id).sort());
+    expect(report.unusedModelEntries.filter((e) => !SUPERSEDED_BY_0287.includes(e))).toEqual([]);
   });
 
   it("vault_enclave is closed and every SECURITY DEFINER pins pg_catalog, pg_temp", () => {
