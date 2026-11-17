@@ -106,6 +106,9 @@ export function IdentityVerification() {
 
           <div className="space-y-2 rounded-xl border border-border p-3">
             <h3 className="text-sm font-semibold">2. Echt mens (pseudoniem)</h3>
+            <p className="text-xs text-muted-foreground">
+              Het groene schildje "Real Human" komt uitsluitend van een zero-knowledge-bewijs. Een paspoortscan, W Identity of betaling geeft het nooit; die koppeling volgt nog.
+            </p>
             {tier1 ? (
               <p role="status" className="flex items-center gap-2 text-sm font-medium text-primary">
                 <ShieldCheck className="h-4 w-4" aria-hidden /> [🛡️] Geverifieerd Uniek Mens
@@ -113,13 +116,12 @@ export function IdentityVerification() {
             ) : (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Bewijs dat je een uniek mens bent zonder je naam vrij te geven. Daarna kun je op je alias de badge "No Bot / Real Human" tonen.
+                  Bewijs met W Identity dat je een uniek mens bent zonder je naam vrij te geven. Dat telt binnen ROUT, maar geeft geen groen schildje.
                 </p>
                 <Button type="button" variant="outline" onClick={() => go("w_identity")} disabled={busy !== null || !s?.wConfigured} className="w-full gap-2 sm:w-auto">
                   {busy === "w_identity" ? spin : <Fingerprint className="h-4 w-4" aria-hidden />} Via W Identity
                 </Button>
                 {s && !s.wConfigured && <p className="text-xs text-muted-foreground">W Identity is nog niet actief.</p>}
-                <p className="text-xs text-muted-foreground">Een paspoortscan telt ook als bewijs dat je een echt mens bent.</p>
               </>
             )}
           </div>
