@@ -31,6 +31,7 @@ export const MERGE_TABLES: Readonly<Record<string, MergeTableRule>> = {
   // Identity, money and legal records: immutable, a merge never touches them.
   identity_verifications: r("skip"),
   verified_identities: r("skip"),
+  verified_identity_nullifiers: r("skip"),
   identity_links: r("skip"),
   wallets: r("skip"),
   wallet_transactions: r("skip"),
