@@ -27,6 +27,8 @@ Applied and moved into `db/`: 0230, 0231, 0233, 0235, 0237 (production reported 
 - 0279_sealed_tables_read_only_grants.sql: applied on Neon (2026-11-15, owner's GO) through `scripts/migration-rollout.ts` (sha256 `dfeb79b8…`) and moved into `db/`; CODE_SCHEMA_LEVEL is 0279. Neon's default privileges had given rout_app INSERT/UPDATE/DELETE on the three 0278 tables (RLS already refused those writes); rout_app now holds SELECT only. No rollback: re-granting writes is never wanted.
 - 0280_zero_drift_reconciliation.sql: written and applied on Neon directly from `db/` (2026-11-15 19:11 UTC, owner's directive) through `scripts/migration-rollout.ts` (sha256 `6b28d9f2…`); CODE_SCHEMA_LEVEL is 0280. Re-creates `rout_pow_spend` and `sync_social_grid_draft` with the replay text (same tokens; the trigger function now on `pg_catalog, pg_temp`) and mirrors Neon Auth's `auth_logs_export_enabled` column for the replay only. No rollback: it changes no behaviour.
 
+- 0288_universal_identity_nullifiers.sql (EXPAND, additive): written and tested, **not applied**, waits for the owner's literal GO; runs after 0287. Adds `verified_identity_nullifiers` and `rout_kyc_attest` (cross-provider refusal) and extends the 0282 badge functions. Proven by `src/test/universal-nullifiers-0288.test.ts`. Rollback: `0288_universal_identity_nullifiers_rollback.sql`, refuses while rows exist.
+
 ## Current state of db/ (2026-11-16 12:20 UTC)
 
 - Schema level **0284** (`CODE_SCHEMA_LEVEL` in `src/lib/schema-version.ts`), 278 rows in `public.schema_migrations` on Neon (276 files in db/ + 4 acknowledged archive entries, see `scripts/migration-history-allowlist.ts`).
