@@ -193,7 +193,7 @@ export async function handleDiditWebhook(request: Request): Promise<Response> {
       }
       if (status === "In Review" || status === "Resubmitted") {
         await sql`update public.identity_verification_sessions
-          set expires_at = greatest(expires_at, now() + make_interval(hours => ${PENDING_REVIEW_HOURS}))
+          set expires_at = greatest(expires_at, now() + make_interval(hours => ${PENDING_REVIEW_HOURS}::int))
           where state = ${member.state} and provider = 'didit'`;
         return json({ ok: true, result: "pending" });
       }
