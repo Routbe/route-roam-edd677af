@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { BadgeCheck, Fingerprint, Loader2, ScanLine, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Fingerprint, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DiditVerificationModal } from "@/components/kyc/DiditVerificationModal";
+import { ProviderDiscoveryHub } from "@/components/kyc/ProviderDiscoveryHub";
+import type { ProviderEngine } from "@/lib/kyc/providers";
 import { getMyIdentityStatus, startIdentityVerification } from "@/lib/identity/identity.functions";
 import { DIDIT_LIMIT_MESSAGE } from "@/lib/identity/identity-rules";
 import { i18n as trI18n } from "@/lib/i18n";
@@ -24,7 +27,8 @@ const RESULT: Record<string, string> = {
 export function IdentityVerification() {
   const status = useQuery({ queryKey: ["identity-status"], queryFn: useServerFn(getMyIdentityStatus) });
   const start = useServerFn(startIdentityVerification);
-  const [busy, setBusy] = useState<string | null>(null);
+  const [busy, setBusy] = useState<ProviderEngine | null>(null);
+  const [diditOpen, setDiditOpen] = useState(false);
 
   useEffect(() => {
     const result = new URLSearchParams(window.location.search).get("identity");
@@ -35,7 +39,11 @@ export function IdentityVerification() {
     }
   }, []);
 
-  async function go(provider: "w_identity" | "didit") {
+  async function go(provider: ProviderEngine) {
+    if (provider === "didit") {
+      setDiditOpen(true);
+      return;
+    }
     setBusy(provider);
     try {
       const res = await start({ data: { provider, origin: window.location.origin } });
@@ -52,6 +60,10 @@ export function IdentityVerification() {
   const tier1 = Boolean(s?.tier1RealHuman);
   const tier2 = Boolean(s?.tier2LegalIdentity);
   const spin = <Loader2 className="h-4 w-4 animate-spin" />;
+  const active = new Set<ProviderEngine>([
+    ...(s?.diditConfigured && s?.diditAvailable ? (["didit"] as const) : []),
+    ...(s?.wConfigured && !tier1 ? (["w_identity"] as const) : []),
+  ]);
   return (
     <section className="space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5">
       <h2 className="flex items-center gap-2 text-lg font-medium">
@@ -77,21 +89,18 @@ export function IdentityVerification() {
                 <p role="status" className="flex items-center gap-2 text-sm font-medium text-primary">
                   <BadgeCheck className="h-4 w-4" aria-hidden /> [✓] Geverifieerde Wettelijke Identiteit
                 </p>
-                <label className="block text-xs text-muted-foreground" htmlFor="verified-real-name">Officiële naam</label>
-                <Input id="verified-real-name" value={s?.verifiedRealName ?? ""} readOnly disabled aria-readonly />
-                <p className="text-xs text-muted-foreground">Deze naam komt van je identiteitsbewijs en kan niet gewijzigd worden.</p>
+                {s?.verifiedRealName ? (
+                  <>
+                    <label className="block text-xs text-muted-foreground" htmlFor="verified-real-name">Officiële naam</label>
+                    <Input id="verified-real-name" value={s.verifiedRealName} readOnly disabled aria-readonly />
+                    <p className="text-xs text-muted-foreground">Deze naam komt van je identiteitsbewijs en kan niet gewijzigd worden.</p>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">ROUT bewaart geen naam of documentnummer, alleen een onomkeerbare vingerafdruk.</p>
+                )}
               </>
             ) : (
-              <>
-                <p className="text-sm text-muted-foreground">
-                  Verifieer je officiële naam met een paspoort- of eID-scan. Eén document geeft maar één blauw vinkje op heel ROUT. We bewaren nooit je documenten.
-                </p>
-                <Button type="button" onClick={() => go("didit")} disabled={busy !== null || !s?.diditConfigured || !s?.diditAvailable} className="w-full gap-2 sm:w-auto">
-                  {busy === "didit" ? spin : <ScanLine className="h-4 w-4" aria-hidden />} Paspoortscan (Didit)
-                </Button>
-                {s && !s.diditAvailable && <p className="text-xs text-destructive">{DIDIT_LIMIT_MESSAGE}</p>}
-                {s && !s.diditConfigured && <p className="text-xs text-muted-foreground">Paspoortscan is nog niet actief.</p>}
-              </>
+              <ProviderDiscoveryHub active={active} busy={busy} onStart={(engine) => void go(engine)} />
             )}
           </div>
 
@@ -116,6 +125,7 @@ export function IdentityVerification() {
           </div>
         </>
       )}
+      <DiditVerificationModal open={diditOpen} onOpenChange={setDiditOpen} />
     </section>
   );
 }

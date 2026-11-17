@@ -153,7 +153,7 @@ function ProviderCard({
           </p>
         </div>
       </div>
-      <ul className="flex flex-wrap gap-1" aria-label="Privacy">
+      <ul className="flex flex-wrap gap-1">
         {p.ratings.map((r) => (
           <li key={r} className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[11px] font-medium text-primary">
             {c.ratings[r]}
