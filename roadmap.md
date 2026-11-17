@@ -376,11 +376,21 @@
 - [ ] Productie opnieuw uitrollen zodat de health-probe 0288 meldt — eigenaar
 - [ ] ROUT_VAULT_KEK op de eigen server, daarna `bun scripts/a1-backfill.ts` (proef) en `--apply` — eigenaar
 - [x] Merklogo's in de verificatiehub: lokaal opgeslagen (public/logos + inline Didit/W Identity), 0 externe verzoeken, `<ProviderLogo>` met Building2-terugval (eID / eIDAS heeft geen eigen merk)
-- [ ] 3000 ms time-outbewaking voor inloggen/profiel met `auth_timeout_circuit_open` — wacht op besluit eigenaar (korter dan een koude Neon-start)
+- [x] Time-outbewaking 6000 ms in requireAuth (`warming_up`, Studio probeert één keer opnieuw) — eigenaar koos 6000 ms i.p.v. 3000 ms
 - [x] Sessies 90 dagen, glijdend na 24 uur (src/lib/auth/session-policy.ts)
-- [ ] SameSite=Strict voor het sessiecookie — wacht op besluit eigenaar (breekt de eerste paginalading na een link of OAuth-terugkeer)
+- [x] SameSite: sessiecookie blijft Lax (besluit eigenaar)
 - [ ] Vernieuwingstokens met familie-intrekking — Better Auth gebruikt geen vernieuwingstokens; vraagt ontwerp + migratie (GO)
-- [ ] 0289 op Neon (accountfusie werkt niet sinds 0287; herstel + bewaking van identiteitsrijen) — wacht op "GO 0289"
+- [x] 0289 live op Neon (15:59 UTC): accountfusie werkt weer, identiteitsrijen worden bij fusie bewaakt
 - [ ] A1-privacybevinding: rout_app leest versleutelde velden en blinde indexen van alle profielen (OPENED_BY_0287) — sluiten via eigen-rij/admin-functies vóór de A1-CONTRACT
 - [x] Rechtencontrole uitgebreid naar CHECK-constraints (check-function-grants.test.ts)
 
+
+## Opdracht eigenaar 2026-11-17 15:58 UTC — GO 0289, Studio-time-out
+- [x] 0289 live, alleen-lezen gecontroleerd (283 rijen, 0289 laatste), CODE_SCHEMA_LEVEL 0289
+- [x] Oorzaak "Profiel niet beschikbaar": Vercel-functies in iad1 (VS), Neon in Frankfurt; ~70 trans-Atlantische rondes per Studio-lading
+- [x] Vercel-functies vastgezet op fra1 (Frankfurt) — werkt na de volgende uitrol
+- [x] Foutmelding noemt geen onjuiste "15 seconden" meer
+- [ ] Productie opnieuw uitrollen en in Vercel controleren dat de functieregio fra1 is — eigenaar
+- [ ] Wachtwoord van neondb_owner vernieuwen (opnieuw in de chat gedeeld) — eigenaar
+- [ ] HTTP-driver van @neondatabase/serverless — niet gedaan: botst met de regel "alleen postgres-driver"; wacht op besluit eigenaar
+- [ ] Minder rondes per query en last_sign_in_at hooguit eens per uur — voorstel, wacht op akkoord
