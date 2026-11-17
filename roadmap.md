@@ -380,4 +380,7 @@
 - [x] Sessies 90 dagen, glijdend na 24 uur (src/lib/auth/session-policy.ts)
 - [ ] SameSite=Strict voor het sessiecookie — wacht op besluit eigenaar (breekt de eerste paginalading na een link of OAuth-terugkeer)
 - [ ] Vernieuwingstokens met familie-intrekking — Better Auth gebruikt geen vernieuwingstokens; vraagt ontwerp + migratie (GO)
+- [ ] 0289 op Neon (accountfusie werkt niet sinds 0287; herstel + bewaking van identiteitsrijen) — wacht op "GO 0289"
+- [ ] A1-privacybevinding: rout_app leest versleutelde velden en blinde indexen van alle profielen (OPENED_BY_0287) — sluiten via eigen-rij/admin-functies vóór de A1-CONTRACT
+- [x] Rechtencontrole uitgebreid naar CHECK-constraints (check-function-grants.test.ts)
 
