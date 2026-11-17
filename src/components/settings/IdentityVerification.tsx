@@ -77,13 +77,13 @@ export function IdentityVerification() {
             <div role="note" className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-sm">
               <p className="font-semibold">🚀 Pioneer / Early Supporter</p>
               <p className="mt-0.5 text-muted-foreground">
-                Als Early Supporter is je paspoortscan via Didit gratis. Verifieer eenmalig om het officiële Blauwe Vinkje te behouden.
+                Als Early Supporter is je paspoortscan via Didit gratis. Verifieer eenmalig om het blauwe schildje "KYC Attested" te behouden.
               </p>
             </div>
           )}
 
           <div className="space-y-2 rounded-xl border border-border p-3">
-            <h3 className="text-sm font-semibold">1. Wettelijke naam (Blauw Vinkje)</h3>
+            <h3 className="text-sm font-semibold">1. KYC Attested (blauw schildje)</h3>
             {tier2 ? (
               <>
                 <p role="status" className="flex items-center gap-2 text-sm font-medium text-primary">
