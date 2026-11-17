@@ -16,6 +16,9 @@ beforeAll(async () => {
   for (const step of planMigrations(listMigrationFiles("db"), new Set())) {
     if (step.action === "run") await db.exec(`begin;${readFileSync(`db/${step.file}`, "utf8")};commit;`);
   }
+  // db-pending/0289 lets the merge executor pass 0287's shape checks (0287 is live on Neon);
+  // this line goes once 0289 moves into db/.
+  await db.exec(`begin;${readFileSync("db-pending/0289_merge_after_field_encryption.sql", "utf8")};commit;`);
 }, 240_000);
 afterAll(async () => {
   await db.close();
