@@ -14,6 +14,10 @@ it("pins Vercel functions to Node 22, even when Bun drives the build", () => {
   const target = nitroTarget({ NITRO_PRESET: "vercel" });
   expect("vercel" in target && target.vercel.functions.runtime).toBe("nodejs22.x");
 });
+it("runs Vercel functions only in fra1, the region of the Neon database", () => {
+  const target = nitroTarget({ VERCEL: "1" });
+  expect("vercel" in target && target.vercel.functions.regions).toEqual(["fra1"]);
+});
 it("keeps the self-contained dist/ build for own servers", () => {
   expect(nitroTarget({})).toEqual({ preset: "node-server", noExternals: true, output: { dir: "dist" } });
 });
