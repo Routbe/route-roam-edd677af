@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { MERGE_TABLES } from "@/lib/account-merge-rules";
 
@@ -21,14 +21,8 @@ describe("account merge guards", () => {
       const at = merge.indexOf(`'merge_blocked:${t}'`);
       return at < 0 || at > deleteAt;
     });
-    // Neon (and the snapshot) stand at 0288; the nullifier guard arrives with the held db-pending/0289.
-    const held = "db-pending/0289_merge_after_field_encryption.sql";
-    if (existsSync(held)) {
-      expect(readFileSync(held, "utf8")).toContain("''merge_blocked:verified_identity_nullifiers''");
-      expect(unguarded).toEqual(["verified_identity_nullifiers"]);
-    } else {
-      expect(unguarded).toEqual([]);
-    }
+    // 0289 (live since 2026-11-17) added the last missing guard, for verified_identity_nullifiers.
+    expect(unguarded).toEqual([]);
   });
 
   it("the recovery ceremony and card records block a merge", () => {
