@@ -2702,9 +2702,9 @@ export interface PublicWorkspacesRow {
   "description": string | null;
   "category": string | null;
   "public_profile": JsonValue;
-  "icon": string | null;
   "bluesky_did": string | null;
   "bluesky_handle": string | null;
+  "icon": string | null;
   "encrypted_config": string | null;
   "encrypted_config_key_id": string | null;
 }
