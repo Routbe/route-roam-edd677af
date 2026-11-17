@@ -3,9 +3,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import Page from "@/components/imported-pages/VerifyGuide";
 import { canonicalLinks } from "@/lib/social-meta";
 
-const TITLE = "Verificatie bij ROUT — blauw vinkje en privacyschild";
+const TITLE = "Geverifieerd profiel — ROUT";
 const DESCRIPTION =
-  "Hoe ROUT je identiteit controleert via je bank of eID, wat het privacyschild betekent en welke gegevens we wél en niet bewaren.";
+  "Verifieer je identiteit om je officiële profiel op rout.be/:handle te bewerken. Blauw schild na KYC, groen schild alleen na een zero-knowledge-bewijs.";
 
 export const Route = createFileRoute("/verify")({
   head: () => ({

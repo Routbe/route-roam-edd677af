@@ -23,8 +23,8 @@ const PRIMARY =
  * action sends them to sign-in first. Badge rules: blue = KYC, green = zero-knowledge only, crown = support.
  */
 export default function VerifyGuide() {
-  const { t, lang } = useI18n() as ReturnType<typeof useI18n> & { lang?: string };
-  const c = hubCopy(lang ?? "nl");
+  const { t, locale } = useI18n();
+  const c = hubCopy(locale);
   const { user, loading } = useAuth();
   const status = useQuery({
     queryKey: ["identity-status"],
