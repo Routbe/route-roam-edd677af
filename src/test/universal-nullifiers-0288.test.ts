@@ -24,6 +24,7 @@ const A = "00000000-0000-4000-8000-000000000881";
 const B = "00000000-0000-4000-8000-000000000882";
 const C = "00000000-0000-4000-8000-000000000883";
 const D = "00000000-0000-4000-8000-000000000884";
+const Z = "00000000-0000-4000-8000-000000000885";
 const PEPPER = "p".repeat(48);
 const nf = (s: string) => universalNullifier(new TextEncoder().encode(s), PEPPER);
 const ATTEST = "select public.rout_kyc_attest($1, $2::text[], $3::text[], $4, $5, $6) as code";
@@ -143,21 +144,21 @@ describe("rout_kyc_attest", () => {
   });
 
   it("blue KYC mark only from KYC, green Real Human shield only from a zero-knowledge proof", async () => {
-    // C: a zero-knowledge humanity proof (written as owner; its verifier is a later migration).
-    await db.query(`insert into public.verified_identity_nullifiers
-        (universal_nullifier, user_id, provider, anchor_kind, is_real_human, has_legal_identity, evidence)
-        values ($1, $2, 'world_id', 'provider_subject', true, false, 'zk_proof')`, [nf("zk-c"), C]);
+    // Z: only a zero-knowledge humanity proof (written as owner; its verifier is a later migration).
     // D: legacy W Identity and manual attestations no longer grant the green shield.
-    await db.exec(`insert into public.users (id, email) values ('${D}', 'd@example.test');
-      insert into public.profiles (id, username) values ('${D}', 'nf-d') on conflict (id) do update set username = excluded.username;
+    await db.exec(`insert into public.users (id, email) values ('${D}', 'd@example.test'), ('${Z}', 'z@example.test');
+      insert into public.profiles (id, username) values ('${D}', 'nf-d'), ('${Z}', 'nf-z') on conflict (id) do update set username = excluded.username;
       insert into public.identity_verifications (user_id, is_verified, verification_provider, unique_human_id)
         values ('${D}', true, 'w_identity', 'legacy-d');`);
+    await db.query(`insert into public.verified_identity_nullifiers
+        (universal_nullifier, user_id, provider, anchor_kind, is_real_human, has_legal_identity, evidence)
+        values ($1, $2, 'world_id', 'provider_subject', true, false, 'zk_proof')`, [nf("zk-z"), Z]);
     const rows = await asApp<{ user_id: string; didit_legal_identity: boolean; real_human: boolean }>(
-      null, "select * from public.rout_public_identity_badges($1::uuid[]) order by user_id", [[A, B, C, D]]);
+      null, "select * from public.rout_public_identity_badges($1::uuid[]) order by user_id", [[A, B, C, D, Z]]);
     const byId = Object.fromEntries(rows.map((r) => [r.user_id, r]));
     // A passed Didit with liveness (is_real_human = true): blue only, never green.
     expect(byId[A]).toMatchObject({ didit_legal_identity: true, real_human: false });
-    expect(byId[C]).toMatchObject({ didit_legal_identity: false, real_human: true });
+    expect(byId[Z]).toMatchObject({ didit_legal_identity: false, real_human: true });
     expect(byId[D]).toMatchObject({ didit_legal_identity: false, real_human: false });
     const [n] = await asApp<{ n: number }>(null, "select public.rout_public_didit_member_count() as n");
     expect(n!.n).toBeGreaterThanOrEqual(2);
