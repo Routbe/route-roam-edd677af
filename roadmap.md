@@ -375,7 +375,9 @@
 - [ ] Wachtwoord van neondb_owner in Neon vernieuwen (stond in de chat) — eigenaar
 - [ ] Productie opnieuw uitrollen zodat de health-probe 0288 meldt — eigenaar
 - [ ] ROUT_VAULT_KEK op de eigen server, daarna `bun scripts/a1-backfill.ts` (proef) en `--apply` — eigenaar
-- [ ] Merklogo's in de verificatiehub: lokaal opgeslagen, geen externe verzoeken, `<ProviderLogo>` met Building2-terugval
-- [ ] 3000 ms time-outbewaking voor inloggen/profiel met `auth_timeout_circuit_open`
-- [ ] Sessies 90 dagen glijdend + vernieuwingstokens met familie-intrekking
+- [x] Merklogo's in de verificatiehub: lokaal opgeslagen (public/logos + inline Didit/W Identity), 0 externe verzoeken, `<ProviderLogo>` met Building2-terugval (eID / eIDAS heeft geen eigen merk)
+- [ ] 3000 ms time-outbewaking voor inloggen/profiel met `auth_timeout_circuit_open` — wacht op besluit eigenaar (korter dan een koude Neon-start)
+- [x] Sessies 90 dagen, glijdend na 24 uur (src/lib/auth/session-policy.ts)
+- [ ] SameSite=Strict voor het sessiecookie — wacht op besluit eigenaar (breekt de eerste paginalading na een link of OAuth-terugkeer)
+- [ ] Vernieuwingstokens met familie-intrekking — Better Auth gebruikt geen vernieuwingstokens; vraagt ontwerp + migratie (GO)
 
