@@ -78,7 +78,7 @@ begin
   insert into public.verified_identity_nullifiers
       (universal_nullifier, user_id, provider, anchor_kind, is_real_human, has_legal_identity, jurisdiction)
     select a.nf, v_user, p_provider, a.kind, p_is_real_human, p_has_legal_identity, p_jurisdiction
-      from pg_catalog.unnest(p_nullifiers, p_anchor_kinds) as a(nf, kind)
+      from rows from (pg_catalog.unnest(p_nullifiers), pg_catalog.unnest(p_anchor_kinds)) as a(nf, kind)
   on conflict (universal_nullifier) do nothing;
   return 'ok';
 end
