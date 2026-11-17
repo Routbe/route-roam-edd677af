@@ -11,7 +11,7 @@ afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.restoreAllMocks(
 it("does not expose database provider messages containing personal data", async () => {
   vi.stubEnv("DATABASE_URL", "postgresql://u:p@ep-privacy.neon.tech/db");
   const fail = async () => { throw Object.assign(new Error("jan@example.com PRIVATE_CONTACT_TEXT"), { code: "23505" }); };
-  postgresMock.mockReturnValue({ begin: fail, unsafe: fail, end: vi.fn() });
+  postgresMock.mockReturnValue({ begin: fail, unsafe: fail, batch: fail, typed: (value: unknown) => value, end: vi.fn() });
   const log = vi.spyOn(console, "error").mockImplementation(() => {});
   await expect(runQuery("select 1")).rejects.toThrow("Er is een tijdelijk verbindingsprobleem opgetreden.");
   expect(JSON.stringify(log.mock.calls)).not.toContain("jan@example.com");
