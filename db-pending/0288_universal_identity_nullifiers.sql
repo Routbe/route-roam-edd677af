@@ -10,8 +10,15 @@
 --   * rout_kyc_attest registers the anchors for the caller (rout.current_user_id only). An anchor
 --     another account already holds through a different provider answers
 --     'identity_already_attested_across_providers', through the same provider 'duplicate_human'.
---   * rout_public_identity_badges and rout_public_didit_member_count (db/0282) also read the legal
---     identity and real-human claims from this table; their signatures and grants are unchanged.
+--   * Each row names its evidence: 'kyc_document' (a document read by a KYC/eIDAS provider) or
+--     'zk_proof' (a zero-knowledge humanity proof). rout_kyc_attest writes only 'kyc_document' and
+--     refuses the zero-knowledge provider; 'zk_proof' rows get their own verifier later.
+--   * Badges (owner directive 2026-11-17 13:45 UTC, strictly separate): the blue "KYC Attested"
+--     shield (didit_legal_identity) comes from a KYC attestation only; the green "Real Human"
+--     shield (real_human) comes EXCLUSIVELY from a 'zk_proof' row. A KYC liveness check, W Identity,
+--     a manual review or a payment never grants the green shield, and a KYC attestation no longer
+--     implies it. rout_public_identity_badges and rout_public_didit_member_count (db/0282) keep
+--     their signatures and grants.
 -- rout_app reads only its own rows (no nullifier column) and writes only through rout_kyc_attest.
 -- Held in db-pending/ until the owner's explicit GO for 0288; it runs after 0287.
 
@@ -24,13 +31,16 @@ create table public.verified_identity_nullifiers (
   is_real_human       boolean not null default false,
   has_legal_identity  boolean not null default false,
   jurisdiction        text check (jurisdiction is null or jurisdiction ~ '^[A-Z]{3}$'),
-  attested_at         timestamptz not null default now()
+  evidence            text not null check (evidence in ('kyc_document', 'zk_proof')),
+  attested_at         timestamptz not null default now(),
+  -- A zero-knowledge humanity proof says nothing about a legal identity.
+  constraint verified_identity_nullifiers_zk_no_legal check (evidence = 'kyc_document' or not has_legal_identity)
 );
 create index verified_identity_nullifiers_user_id_fkx on public.verified_identity_nullifiers (user_id);
 
 alter table public.verified_identity_nullifiers enable row level security;
 revoke all on table public.verified_identity_nullifiers from public, rout_app;
-grant select (user_id, provider, anchor_kind, is_real_human, has_legal_identity, jurisdiction, attested_at)
+grant select (user_id, provider, anchor_kind, is_real_human, has_legal_identity, jurisdiction, evidence, attested_at)
   on table public.verified_identity_nullifiers to rout_app;
 create policy rout_scope on public.verified_identity_nullifiers
   for select to rout_app using (user_id = public.rout_current_user_id());
@@ -60,7 +70,9 @@ begin
      or exists (select 1 from pg_catalog.unnest(p_nullifiers) x where x is null or x !~ '^[0-9a-f]{64}$')
      or exists (select 1 from pg_catalog.unnest(p_anchor_kinds) k where k is null or k not in ('personal_number', 'document', 'provider_subject'))
      or (p_jurisdiction is not null and p_jurisdiction !~ '^[A-Z]{3}$')
-     or p_provider is null or p_is_real_human is null or p_has_legal_identity is null then
+     or p_provider is null or p_is_real_human is null or p_has_legal_identity is null
+     -- World ID is a zero-knowledge proof, never a KYC document; it gets its own verifier.
+     or p_provider = 'world_id' then
     return 'invalid_input';
   end if;
   -- Serialise attempts on the same anchors (sorted, so two attempts never wait on each other in a cycle).
@@ -76,8 +88,8 @@ begin
     return case when v_other = p_provider then 'duplicate_human' else 'identity_already_attested_across_providers' end;
   end if;
   insert into public.verified_identity_nullifiers
-      (universal_nullifier, user_id, provider, anchor_kind, is_real_human, has_legal_identity, jurisdiction)
-    select a.nf, v_user, p_provider, a.kind, p_is_real_human, p_has_legal_identity, p_jurisdiction
+      (universal_nullifier, user_id, provider, anchor_kind, is_real_human, has_legal_identity, jurisdiction, evidence)
+    select a.nf, v_user, p_provider, a.kind, p_is_real_human, p_has_legal_identity, p_jurisdiction, 'kyc_document'
       from rows from (pg_catalog.unnest(p_nullifiers), pg_catalog.unnest(p_anchor_kinds)) as a(nf, kind)
   on conflict (universal_nullifier) do nothing;
   return 'ok';
@@ -97,16 +109,16 @@ as $function$
     select p.id,
       (coalesce(iv.is_verified, false) and iv.verification_provider::text = 'didit')
         or (coalesce(vi.tier_2_legal_identity, false) and vi.national_id_nullifier is not null)
-        or exists (select 1 from public.verified_identity_nullifiers n where n.user_id = p.id and n.has_legal_identity) as legal,
-      coalesce(vi.tier_1_real_human, false)
-        or (coalesce(iv.is_verified, false) and iv.verification_provider::text in ('w_identity', 'didit', 'manual'))
-        or exists (select 1 from public.verified_identity_nullifiers n where n.user_id = p.id and n.is_real_human) as human
+        or exists (select 1 from public.verified_identity_nullifiers n
+                    where n.user_id = p.id and n.evidence = 'kyc_document' and n.has_legal_identity) as legal,
+      exists (select 1 from public.verified_identity_nullifiers n
+               where n.user_id = p.id and n.evidence = 'zk_proof' and n.is_real_human) as human
     from public.profiles p
     left join public.identity_verifications iv on iv.user_id = p.id
     left join public.verified_identities vi on vi.user_id = p.id
     where p.id = any (coalesce(p_user_ids[1:200], '{}'::uuid[]))
   )
-  select t.id, t.legal, t.legal or t.human from t
+  select t.id, t.legal, t.human from t
 $function$;
 
 create or replace function public.rout_public_didit_member_count()
@@ -125,7 +137,8 @@ as $function$
      and coalesce(p.is_suspended, false) = false
      and ((coalesce(iv.is_verified, false) and iv.verification_provider::text = 'didit')
        or (coalesce(vi.tier_2_legal_identity, false) and vi.national_id_nullifier is not null)
-       or exists (select 1 from public.verified_identity_nullifiers n where n.user_id = p.id and n.has_legal_identity))
+       or exists (select 1 from public.verified_identity_nullifiers n
+                   where n.user_id = p.id and n.evidence = 'kyc_document' and n.has_legal_identity))
 $function$;
 
 revoke all on function public.rout_public_identity_badges(uuid[]) from public;
