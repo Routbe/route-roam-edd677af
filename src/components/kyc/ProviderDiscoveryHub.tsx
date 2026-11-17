@@ -1,12 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Building2, ChevronDown, Loader2, Search, ShieldCheck } from "lucide-react";
 import { hubCopy } from "@/lib/kyc/hub-copy";
+import { cn } from "@/lib/utils";
 import {
   discoverProviders,
-  recommendedProviders,
   regionFromLocale,
   type IdentityProviderEntry,
   type ProviderEngine,
@@ -16,17 +14,22 @@ import {
 const FILTERS: ProviderFilter[] = ["all", "national_eid", "passport_nfc", "zero_knowledge"];
 
 /**
- * Provider Discovery Hub: region-aware recommended row, live search and category chips over the
- * identity provider catalogue. Only providers with an active engine can be started.
+ * Provider Discovery Hub: one compact sticky control bar (search + snap-scrolling chips), the
+ * integrated engines as active cards, and every other provider folded into a compact
+ * "upcoming" grid. Only providers with an active engine can be started. Logos are inline SVG
+ * drawn by ROUT (no third-party image requests); without a mark a neutral icon is shown.
  */
 export function ProviderDiscoveryHub({
   active,
   busy,
   onStart,
+  signedOut = false,
 }: {
   active: ReadonlySet<ProviderEngine>;
   busy: ProviderEngine | null;
   onStart: (engine: ProviderEngine) => void;
+  /** Visitor without a session: engine cards lead to sign-in instead of claiming a status. */
+  signedOut?: boolean;
 }) {
   const { i18n } = useTranslation();
   const c = hubCopy(i18n.language);
@@ -41,139 +44,166 @@ export function ProviderDiscoveryHub({
     return null;
   }, []);
 
-  const searching = query.trim() !== "" || filter !== "all";
   const list = useMemo(() => discoverProviders({ query, filter, region, active, docLabels: c.docs }), [query, filter, region, active, c.docs]);
-  const recommended = useMemo(() => recommendedProviders(region, active), [region, active]);
+  const engines = list.filter((p) => p.engine !== null);
+  const upcoming = list.filter((p) => p.engine === null);
+  const searching = query.trim() !== "";
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h3 className="text-sm font-semibold">{c.title}</h3>
-        <p className="mt-1 text-sm text-muted-foreground">{c.intro}</p>
+    <div className="space-y-5">
+      <div className="sticky top-0 z-10 -mx-1 space-y-1 bg-background/95 px-1 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value.slice(0, 80))}
+            placeholder={c.search}
+            aria-label={c.searchLabel}
+            className="h-11 w-full rounded-full border border-border bg-card pl-9 pr-4 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </div>
+        <div role="group" aria-label={c.searchLabel} className="chip-rail pr-6">
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              aria-pressed={filter === f}
+              onClick={() => setFilter(f)}
+              className="group inline-flex min-h-11 items-center !border-0 !bg-transparent !bg-none p-0 !shadow-none"
+            >
+              <span
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                  filter === f ? "border-foreground bg-foreground text-background" : "border-border bg-card text-foreground group-hover:bg-accent",
+                )}
+              >
+                {c.filters[f]}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-        <Input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value.slice(0, 80))}
-          placeholder={c.search}
-          aria-label={c.searchLabel}
-          className="min-h-11 pl-9"
-        />
-      </div>
-
-      <div role="group" aria-label={c.searchLabel} className="flex flex-wrap gap-2">
-        {FILTERS.map((f) => (
-          <Button
-            key={f}
-            type="button"
-            size="sm"
-            variant={filter === f ? "default" : "outline"}
-            aria-pressed={filter === f}
-            onClick={() => setFilter(f)}
-            className="min-h-11 rounded-full"
-          >
-            {c.filters[f]}
-          </Button>
-        ))}
-      </div>
-
-      {!searching && recommended.length > 0 && (
-        <section aria-label={c.recommended} className="space-y-2">
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{c.recommended}</h4>
-          <ProviderGrid providers={recommended} active={active} busy={busy} onStart={onStart} />
+      {engines.length > 0 && (
+        <section aria-label={c.active} className="space-y-2">
+          <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{c.active}</h3>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {engines.map((p) => (
+              <li key={p.id}>
+                <ActiveCard provider={p} live={p.engine !== null && active.has(p.engine)} signedOut={signedOut} busy={busy} onStart={onStart} />
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
-      <section aria-label={c.all} className="space-y-2">
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{c.all}</h4>
-        {list.length ? (
-          <ProviderGrid providers={list} active={active} busy={busy} onStart={onStart} />
-        ) : (
-          <p role="status" className="text-sm text-muted-foreground">{c.empty}</p>
-        )}
-      </section>
+      {upcoming.length > 0 && (
+        <details className="group rounded-2xl border border-border" open={searching || filter !== "all" || undefined}>
+          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-4 text-sm font-medium [&::-webkit-details-marker]:hidden">
+            <span>
+              {c.upcoming} <span className="text-muted-foreground">· {upcoming.length}</span>
+            </span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden />
+          </summary>
+          <section aria-label={c.upcoming}>
+            <ul className="grid grid-cols-2 gap-px border-t border-border bg-border">
+              {upcoming.map((p) => (
+                <li key={p.id}>
+                  <article aria-label={p.name} className="flex h-full items-center gap-2 bg-background p-3">
+                    <ProviderMark provider={p} size="sm" />
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold">{p.name}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">{c.ratings[p.ratings[0]!]}</p>
+                    </div>
+                  </article>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </details>
+      )}
+
+      {list.length === 0 && (
+        <p role="status" className="text-sm text-muted-foreground">{c.empty}</p>
+      )}
 
       <p className="text-xs text-muted-foreground">{c.privacy}</p>
     </div>
   );
 }
 
-function ProviderGrid({
-  providers,
-  active,
-  busy,
-  onStart,
-}: {
-  providers: readonly IdentityProviderEntry[];
-  active: ReadonlySet<ProviderEngine>;
-  busy: ProviderEngine | null;
-  onStart: (engine: ProviderEngine) => void;
-}) {
-  return (
-    <ul className="grid gap-2 sm:grid-cols-2">
-      {providers.map((p) => (
-        <li key={p.id}>
-          <ProviderCard provider={p} active={active} busy={busy} onStart={onStart} />
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function ProviderCard({
+function ActiveCard({
   provider: p,
-  active,
+  live,
+  signedOut,
   busy,
   onStart,
 }: {
   provider: IdentityProviderEntry;
-  active: ReadonlySet<ProviderEngine>;
+  live: boolean;
+  signedOut: boolean;
   busy: ProviderEngine | null;
   onStart: (engine: ProviderEngine) => void;
 }) {
   const { i18n } = useTranslation();
   const c = hubCopy(i18n.language);
-  const startable = p.engine !== null && active.has(p.engine);
   return (
-    <article className="flex h-full flex-col gap-3 rounded-xl border border-border bg-card p-3" aria-label={p.name}>
+    <article aria-label={p.name} className="flex h-full flex-col gap-3 rounded-2xl border border-foreground/15 bg-card p-4">
       <div className="flex items-center gap-3">
-        <span
-          aria-hidden
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary"
-        >
-          {p.monogram}
-        </span>
-        <div className="min-w-0">
+        <ProviderMark provider={p} size="lg" />
+        <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{p.name}</p>
           <p className="truncate text-xs text-muted-foreground">
-            {p.regions.map((r) => (r === "GLOBAL" ? "🌐" : r)).join(" · ")}
+            {p.ratings.map((r) => c.ratings[r]).join(" · ")} · {p.documents.map((d) => c.docs[d]).join(", ")}
           </p>
         </div>
-      </div>
-      <ul className="flex flex-wrap gap-1">
-        {p.ratings.map((r) => (
-          <li key={r} className="rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[11px] font-medium text-primary">
-            {c.ratings[r]}
-          </li>
-        ))}
-      </ul>
-      <p className="text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">{c.documents}:</span> {p.documents.map((d) => c.docs[d]).join(", ")}
-      </p>
-      <div className="mt-auto">
-        {startable ? (
-          <Button type="button" size="sm" className="min-h-11 w-full gap-2" disabled={busy !== null} onClick={() => onStart(p.engine!)}>
-            {busy === p.engine && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />} {c.start}
-          </Button>
-        ) : (
-          <Button type="button" size="sm" variant="outline" className="min-h-11 w-full" disabled aria-disabled>
-            {p.engine ? c.inactive : c.planned}
-          </Button>
+        {!signedOut && (
+          <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+            <span aria-hidden className={cn("h-2 w-2 rounded-full", live ? "bg-identity-human" : "bg-muted-foreground/40")} />
+            {live ? c.live : c.offline}
+          </span>
         )}
       </div>
+      <button
+        type="button"
+        disabled={(!live && !signedOut) || busy !== null}
+        onClick={() => p.engine && onStart(p.engine)}
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {busy === p.engine && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+        {signedOut ? c.signInToStart : live ? c.start : c.inactive}
+      </button>
     </article>
+  );
+}
+
+/** Inline vector marks drawn by ROUT for the integrated engines; never fetched from a vendor CDN. */
+function ProviderMark({ provider: p, size }: { provider: IdentityProviderEntry; size: "sm" | "lg" }) {
+  const box = size === "lg" ? "h-10 w-10 rounded-xl" : "h-8 w-8 rounded-lg";
+  const icon = size === "lg" ? "h-5 w-5" : "h-4 w-4";
+  let mark: ReactNode;
+  if (p.id === "didit") {
+    mark = (
+      <svg viewBox="0 0 24 24" className={icon} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+        <path d="M6 4h5a8 8 0 0 1 0 16H6z" />
+        <circle cx="11" cy="12" r="2.5" fill="currentColor" stroke="none" />
+      </svg>
+    );
+  } else if (p.id === "w_identity") {
+    mark = (
+      <svg viewBox="0 0 24 24" className={icon} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M3 6l4 12 5-9 5 9 4-12" />
+      </svg>
+    );
+  } else if (p.categories.includes("zero_knowledge")) {
+    mark = <ShieldCheck className={icon} strokeWidth={1.75} aria-hidden />;
+  } else {
+    mark = <Building2 className={icon} strokeWidth={1.75} aria-hidden />;
+  }
+  return (
+    <span aria-hidden className={cn("flex shrink-0 items-center justify-center border border-border bg-background text-foreground", box)}>
+      {mark}
+    </span>
   );
 }

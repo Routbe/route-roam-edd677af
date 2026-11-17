@@ -235,6 +235,8 @@ textarea[data-tour^="cc-"] {
   --identity-verified: #1d9bf0;
   /* Green Real Human shield: zero-knowledge humanity proofs only. */
   --identity-human: #16a34a;
+  /* Gold Supporter crown: support for ROUT, never identity. */
+  --identity-supporter: #b8860b;
   --sketch-ink: hsl(var(--foreground) / 0.45);
   --sketch-echo: hsl(var(--foreground) / 0.25);
 
@@ -367,6 +369,7 @@ textarea[data-tour^="cc-"] {
   --color-shield-hardware-foreground: hsl(var(--shield-hardware-foreground));
   --color-identity-verified: var(--identity-verified);
   --color-identity-human: var(--identity-human);
+  --color-identity-supporter: var(--identity-supporter);
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
@@ -2014,3 +2017,18 @@ html[data-liquid]:not([data-theme="mechanical"]) [style*="--lg-filter"] { backdr
 @keyframes shield-promote { 0% { box-shadow: 0 0 0 0 currentColor; } 60% { box-shadow: 0 0 0 6px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 .shield-promoted { animation: shield-promote 1.2s ease-out 1; }
 @media (prefers-reduced-motion: reduce) { .shield-promoted { animation: none; } }
+
+/* Verify hub: horizontal snap chips with a right-edge fade (no layout shift). */
+@utility chip-rail {
+  display: flex;
+  gap: 0.375rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  scroll-snap-type: x mandatory;
+  touch-action: pan-x;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent);
+  &::-webkit-scrollbar { display: none; }
+  & > * { scroll-snap-align: start; flex: none; }
+}

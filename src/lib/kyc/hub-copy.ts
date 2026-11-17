@@ -17,6 +17,25 @@ export type HubCopy = {
   docs: Record<DocumentKind, string>;
   ratings: Record<PrivacyRating, string>;
   privacy: string;
+  active: string;
+  upcoming: string;
+  live: string;
+  offline: string;
+  signInToStart: string;
+  page: {
+    title: string;
+    subtitle: string;
+    cta: string;
+    ctaDone: string;
+    signIn: string;
+    badgesTitle: string;
+    blue: string;
+    blueBody: string;
+    green: string;
+    greenBody: string;
+    crown: string;
+    crownBody: string;
+  };
   modalTitle: string;
   modalIntro: string;
   modalStart: string;
@@ -47,6 +66,25 @@ export const HUB_COPY: Record<"nl" | "en" | "fr" | "de", HubCopy> = {
     docs: { passport: "Paspoort", id_card: "Identiteitskaart", residence_permit: "Verblijfsvergunning", driving_licence: "Rijbewijs", eid_app: "eID-app", selfie: "Selfie-check", zk_proof: "Zero-knowledge bewijs" },
     ratings: { eidas_high: "EU eIDAS Hoog", eidas_substantial: "EU eIDAS Substantieel", zk_enclave: "Zero-Knowledge Enclave", biometric: "Biometrisch" },
     privacy: "Eén document geeft één identiteit op heel ROUT, ook via een andere provider.",
+    active: "Actieve providers",
+    upcoming: "Toekomstige integraties",
+    live: "Actief",
+    offline: "Nog niet actief",
+    signInToStart: "Log in om te starten",
+    page: {
+      title: "Geverifieerd profiel",
+      subtitle: "Verifieer je identiteit om je officiële profiel op rout.be/:handle te bewerken.",
+      cta: "Verifieer je",
+      ctaDone: "Je bent geverifieerd",
+      signIn: "Log eerst in om te verifiëren.",
+      badgesTitle: "Drie tekens, strikt gescheiden",
+      blue: "Blauw schild — KYC Attested",
+      blueBody: "Na een KYC-controle via Didit of eIDAS.",
+      green: "Groen schild — Real Human",
+      greenBody: "Alleen na een zero-knowledge-bewijs.",
+      crown: "Gouden kroon — Supporter",
+      crownBody: "Steun aan ROUT, nooit een identiteitsbewijs.",
+    },
     modalTitle: "Verifiëren met Didit",
     modalIntro: "Je scant je paspoort of identiteitskaart (bij voorkeur de chip) en doet een korte selfie-check bij Didit. ROUT ontvangt geen foto's en bewaart geen naam of documentnummer.",
     modalStart: "Start paspoortscan",
@@ -83,6 +121,25 @@ export const HUB_COPY: Record<"nl" | "en" | "fr" | "de", HubCopy> = {
     docs: { passport: "Passport", id_card: "Identity card", residence_permit: "Residence permit", driving_licence: "Driving licence", eid_app: "eID app", selfie: "Selfie check", zk_proof: "Zero-knowledge proof" },
     ratings: { eidas_high: "EU eIDAS High", eidas_substantial: "EU eIDAS Substantial", zk_enclave: "Zero-Knowledge Enclave", biometric: "Biometric" },
     privacy: "One document gives one identity across ROUT, also through another provider.",
+    active: "Active providers",
+    upcoming: "Upcoming integrations",
+    live: "Active",
+    offline: "Not active yet",
+    signInToStart: "Sign in to start",
+    page: {
+      title: "Verified profile",
+      subtitle: "Verify your identity to edit your official profile at rout.be/:handle.",
+      cta: "Verify now",
+      ctaDone: "You are verified",
+      signIn: "Sign in first to verify.",
+      badgesTitle: "Three marks, strictly separate",
+      blue: "Blue shield — KYC Attested",
+      blueBody: "After a KYC check via Didit or eIDAS.",
+      green: "Green shield — Real Human",
+      greenBody: "Only after a zero-knowledge proof.",
+      crown: "Gold crown — Supporter",
+      crownBody: "Support for ROUT, never proof of identity.",
+    },
     modalTitle: "Verify with Didit",
     modalIntro: "You scan your passport or identity card (the chip if possible) and take a short selfie check at Didit. ROUT receives no photos and stores no name or document number.",
     modalStart: "Start passport scan",
@@ -119,6 +176,25 @@ export const HUB_COPY: Record<"nl" | "en" | "fr" | "de", HubCopy> = {
     docs: { passport: "Passeport", id_card: "Carte d'identité", residence_permit: "Titre de séjour", driving_licence: "Permis de conduire", eid_app: "App eID", selfie: "Contrôle selfie", zk_proof: "Preuve à divulgation nulle" },
     ratings: { eidas_high: "EU eIDAS Élevé", eidas_substantial: "EU eIDAS Substantiel", zk_enclave: "Enclave Zero-Knowledge", biometric: "Biométrique" },
     privacy: "Un document donne une seule identité sur ROUT, même via un autre fournisseur.",
+    active: "Fournisseurs actifs",
+    upcoming: "Intégrations à venir",
+    live: "Actif",
+    offline: "Pas encore actif",
+    signInToStart: "Connectez-vous pour commencer",
+    page: {
+      title: "Profil vérifié",
+      subtitle: "Vérifiez votre identité pour modifier votre profil officiel sur rout.be/:handle.",
+      cta: "Vérifiez-vous",
+      ctaDone: "Vous êtes vérifié",
+      signIn: "Connectez-vous d'abord pour vérifier.",
+      badgesTitle: "Trois marques, strictement séparées",
+      blue: "Bouclier bleu — KYC Attested",
+      blueBody: "Après un contrôle KYC via Didit ou eIDAS.",
+      green: "Bouclier vert — Real Human",
+      greenBody: "Uniquement après une preuve à divulgation nulle.",
+      crown: "Couronne dorée — Supporter",
+      crownBody: "Un soutien à ROUT, jamais une preuve d'identité.",
+    },
     modalTitle: "Vérifier avec Didit",
     modalIntro: "Vous scannez votre passeport ou votre carte d'identité (la puce si possible) et faites un court contrôle selfie chez Didit. ROUT ne reçoit aucune photo et ne garde ni nom ni numéro de document.",
     modalStart: "Commencer le scan",
@@ -155,6 +231,25 @@ export const HUB_COPY: Record<"nl" | "en" | "fr" | "de", HubCopy> = {
     docs: { passport: "Reisepass", id_card: "Personalausweis", residence_permit: "Aufenthaltstitel", driving_licence: "Führerschein", eid_app: "eID-App", selfie: "Selfie-Prüfung", zk_proof: "Zero-Knowledge-Beweis" },
     ratings: { eidas_high: "EU eIDAS Hoch", eidas_substantial: "EU eIDAS Substanziell", zk_enclave: "Zero-Knowledge-Enklave", biometric: "Biometrisch" },
     privacy: "Ein Dokument ergibt eine Identität auf ganz ROUT, auch über einen anderen Anbieter.",
+    active: "Aktive Anbieter",
+    upcoming: "Kommende Integrationen",
+    live: "Aktiv",
+    offline: "Noch nicht aktiv",
+    signInToStart: "Zum Starten anmelden",
+    page: {
+      title: "Verifiziertes Profil",
+      subtitle: "Verifiziere deine Identität, um dein offizielles Profil auf rout.be/:handle zu bearbeiten.",
+      cta: "Jetzt verifizieren",
+      ctaDone: "Du bist verifiziert",
+      signIn: "Melde dich zuerst an, um zu verifizieren.",
+      badgesTitle: "Drei Zeichen, strikt getrennt",
+      blue: "Blaues Schild — KYC Attested",
+      blueBody: "Nach einer KYC-Prüfung über Didit oder eIDAS.",
+      green: "Grünes Schild — Real Human",
+      greenBody: "Nur nach einem Zero-Knowledge-Beweis.",
+      crown: "Goldene Krone — Supporter",
+      crownBody: "Unterstützung für ROUT, nie ein Identitätsnachweis.",
+    },
     modalTitle: "Mit Didit verifizieren",
     modalIntro: "Du scannst deinen Reisepass oder Ausweis (wenn möglich den Chip) und machst eine kurze Selfie-Prüfung bei Didit. ROUT erhält keine Fotos und speichert weder Namen noch Dokumentnummer.",
     modalStart: "Ausweis-Scan starten",
