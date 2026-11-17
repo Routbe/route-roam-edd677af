@@ -5,7 +5,7 @@
 --     is reduced in the app to universal_nullifier = BLAKE3(Poseidon256(canonical_id) || pepper)
 --     (src/lib/kyc/nullifier.ts) over the canonical ICAO/eIDAS anchor (src/lib/kyc/canonical-id.ts).
 --   * public.verified_identity_nullifiers keeps one row per anchor with a UNIQUE nullifier, the
---     provider, the zero-knowledge claims (is_real_human, has_legal_identity) and the ISO 3166-1
+--     provider, the claims (is_real_human, has_legal_identity) and the ISO 3166-1
 --     alpha-3 jurisdiction.
 --   * rout_kyc_attest registers the anchors for the caller (rout.current_user_id only). An anchor
 --     another account already holds through a different provider answers
