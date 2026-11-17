@@ -7,22 +7,27 @@ import { createRef } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const worker = vi.hoisted(() => ({ slots: new Map<string, string[]>(), next: 0, order: [] as string[] }));
+const worker = vi.hoisted(() => ({ slots: new Map<string, string[]>(), next: 0, order: [] as string[], pending: 0 }));
+/** Counts in-flight worker calls so a flush waits for real completion, not for a fixed delay. */
+const tracked = vi.hoisted(() => <A extends unknown[], R>(fn: (...a: A) => Promise<R>) => async (...a: A): Promise<R> => {
+  worker.pending++;
+  try { return await fn(...a); } finally { worker.pending--; }
+});
 vi.mock("@/lib/crypto-enclave/client", () => ({
   enclave: {
     password: {
-      open: vi.fn(async () => { const slot = `s${++worker.next}`; worker.slots.set(slot, []); return { slot, maxBytes: 256 }; }),
-      key: vi.fn(async (slot: string, ch: string) => {
+      open: vi.fn(tracked(async () => { const slot = `s${++worker.next}`; worker.slots.set(slot, []); return { slot, maxBytes: 256 }; })),
+      key: vi.fn(tracked(async (slot: string, ch: string) => {
         await new Promise((r) => setTimeout(r, ch === "a" ? 5 : 0)); // a slow first key must not be overtaken
         const s = worker.slots.get(slot);
         if (!s) throw Object.assign(new Error("x"), { code: "unknown_handle" });
         s.push(ch);
         worker.order.push(ch);
         return { length: s.length };
-      }),
-      backspace: vi.fn(async (slot: string) => { const s = worker.slots.get(slot)!; s.pop(); return { length: s.length }; }),
-      close: vi.fn(async (slot: string) => { worker.slots.delete(slot); return null; }),
-      equal: vi.fn(async (a: string, b: string) => ({ equal: a !== b && worker.slots.get(a)?.join("") === worker.slots.get(b)?.join("") })),
+      })),
+      backspace: vi.fn(tracked(async (slot: string) => { const s = worker.slots.get(slot)!; s.pop(); return { length: s.length }; })),
+      close: vi.fn(tracked(async (slot: string) => { worker.slots.delete(slot); return null; })),
+      equal: vi.fn(tracked(async (a: string, b: string) => ({ equal: a !== b && worker.slots.get(a)?.join("") === worker.slots.get(b)?.join("") }))),
     },
   },
 }));
@@ -30,8 +35,15 @@ vi.mock("react-i18next", () => ({ useTranslation: () => ({ t: (k: string) => k }
 
 import { SecurePasswordInput, type SecurePasswordHandle } from "./SecurePasswordInput";
 
-beforeEach(() => { worker.slots.clear(); worker.next = 0; worker.order = []; });
-const flush = () => act(async () => { await new Promise((r) => setTimeout(r, 30)); });
+const tick = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** Waits until every worker call the component started (including chained ones) has settled. */
+const flush = () => act(async () => {
+  const end = Date.now() + 10_000;
+  do await tick(10); while (worker.pending > 0 && Date.now() < end);
+  await tick(10);
+  if (worker.pending > 0) throw new Error("worker calls still pending after 10 s");
+});
+beforeEach(async () => { await flush(); worker.slots.clear(); worker.next = 0; worker.order = []; });
 
 describe("paranoid mode", () => {
   it("sends keys in typing order, shows only dots and never holds a value", async () => {

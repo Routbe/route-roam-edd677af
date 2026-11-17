@@ -29,6 +29,12 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // The full run replays db/ in PGlite in many files at once and runs a Z3 proof; with one worker
+    // per core those CPU-bound files starved each other past the 5 s default (10 timeouts on 16 cores).
+    // Half the cores and a 30 s per-test budget keep every test deterministic; an assertion still fails at once.
+    maxWorkers: "50%",
+    testTimeout: 30_000,
+    hookTimeout: 120_000,
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
