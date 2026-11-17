@@ -29,3 +29,25 @@ select distinct r.role, pol.tbl, pol.polname, fn.oid::regprocedure::text as fn
  order by 1, 2, 3, 4`;
 
 export type GrantGap = { role: string; tbl: string; polname: string; fn: string };
+
+/**
+ * Same audit for CHECK constraints: a role that may INSERT or UPDATE a table must be able to
+ * execute every function a CHECK on that table calls, or each of its writes fails with
+ * "permission denied" (0287's RPF1 shape checks broke account merge this way until 0289).
+ */
+export const CHECK_GRANT_AUDIT_SQL = `
+with r as (select unnest($1::text[]) as role)
+select distinct r.role, n.nspname || '.' || c.relname as tbl, k.conname as polname, fn.oid::regprocedure::text as fn
+  from r cross join pg_catalog.pg_constraint k
+  join pg_catalog.pg_class c on c.oid = k.conrelid
+  join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+  join pg_catalog.pg_depend d on d.classid = 'pg_catalog.pg_constraint'::regclass and d.objid = k.oid
+   and d.refclassid = 'pg_catalog.pg_proc'::regclass
+  join pg_catalog.pg_proc fn on fn.oid = d.refobjid
+ where k.contype = 'c'
+   and exists (select 1 from pg_catalog.pg_roles x where x.rolname = r.role)
+   and (pg_catalog.has_table_privilege(r.role, c.oid, 'INSERT') or pg_catalog.has_table_privilege(r.role, c.oid, 'UPDATE')
+        or exists (select 1 from pg_catalog.pg_attribute a where a.attrelid = c.oid and a.attnum > 0 and not a.attisdropped
+                   and pg_catalog.has_column_privilege(r.role, c.oid, a.attnum, 'INSERT,UPDATE')))
+   and not pg_catalog.has_function_privilege(r.role, fn.oid, 'EXECUTE')
+ order by 1, 2, 3, 4`;
