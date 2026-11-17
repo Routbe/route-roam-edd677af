@@ -23,10 +23,13 @@ export function ProviderDiscoveryHub({
   active,
   busy,
   onStart,
+  signedOut = false,
 }: {
   active: ReadonlySet<ProviderEngine>;
   busy: ProviderEngine | null;
   onStart: (engine: ProviderEngine) => void;
+  /** Visitor without a session: engine cards lead to sign-in instead of claiming a status. */
+  signedOut?: boolean;
 }) {
   const { i18n } = useTranslation();
   const c = hubCopy(i18n.language);
@@ -67,7 +70,7 @@ export function ProviderDiscoveryHub({
               type="button"
               aria-pressed={filter === f}
               onClick={() => setFilter(f)}
-              className="group inline-flex min-h-11 items-center"
+              className="group inline-flex min-h-11 items-center border-0 bg-transparent p-0 shadow-none"
             >
               <span
                 className={cn(
@@ -88,7 +91,7 @@ export function ProviderDiscoveryHub({
           <ul className="grid gap-2 sm:grid-cols-2">
             {engines.map((p) => (
               <li key={p.id}>
-                <ActiveCard provider={p} live={p.engine !== null && active.has(p.engine)} busy={busy} onStart={onStart} />
+                <ActiveCard provider={p} live={p.engine !== null && active.has(p.engine)} signedOut={signedOut} busy={busy} onStart={onStart} />
               </li>
             ))}
           </ul>
@@ -133,11 +136,13 @@ export function ProviderDiscoveryHub({
 function ActiveCard({
   provider: p,
   live,
+  signedOut,
   busy,
   onStart,
 }: {
   provider: IdentityProviderEntry;
   live: boolean;
+  signedOut: boolean;
   busy: ProviderEngine | null;
   onStart: (engine: ProviderEngine) => void;
 }) {
@@ -153,19 +158,21 @@ function ActiveCard({
             {p.ratings.map((r) => c.ratings[r]).join(" · ")} · {p.documents.map((d) => c.docs[d]).join(", ")}
           </p>
         </div>
-        <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-          <span aria-hidden className={cn("h-2 w-2 rounded-full", live ? "bg-identity-human" : "bg-muted-foreground/40")} />
-          {live ? c.live : c.offline}
-        </span>
+        {!signedOut && (
+          <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+            <span aria-hidden className={cn("h-2 w-2 rounded-full", live ? "bg-identity-human" : "bg-muted-foreground/40")} />
+            {live ? c.live : c.offline}
+          </span>
+        )}
       </div>
       <button
         type="button"
-        disabled={!live || busy !== null}
+        disabled={(!live && !signedOut) || busy !== null}
         onClick={() => p.engine && onStart(p.engine)}
         className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-foreground px-4 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {busy === p.engine && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-        {live ? c.start : c.inactive}
+        {signedOut ? c.signInToStart : live ? c.start : c.inactive}
       </button>
     </article>
   );

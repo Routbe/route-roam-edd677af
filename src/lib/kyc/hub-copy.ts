@@ -21,6 +21,7 @@ export type HubCopy = {
   upcoming: string;
   live: string;
   offline: string;
+  signInToStart: string;
   page: {
     title: string;
     subtitle: string;
@@ -69,6 +70,7 @@ export const HUB_COPY: Record<"nl" | "en" | "fr" | "de", HubCopy> = {
     upcoming: "Toekomstige integraties",
     live: "Actief",
     offline: "Nog niet actief",
+    signInToStart: "Log in om te starten",
     page: {
       title: "Geverifieerd profiel",
       subtitle: "Verifieer je identiteit om je officiële profiel op rout.be/:handle te bewerken.",
@@ -123,6 +125,7 @@ export const HUB_COPY: Record<"nl" | "en" | "fr" | "de", HubCopy> = {
     upcoming: "Upcoming integrations",
     live: "Active",
     offline: "Not active yet",
+    signInToStart: "Sign in to start",
     page: {
       title: "Verified profile",
       subtitle: "Verify your identity to edit your official profile at rout.be/:handle.",
@@ -177,6 +180,7 @@ export const HUB_COPY: Record<"nl" | "en" | "fr" | "de", HubCopy> = {
     upcoming: "Intégrations à venir",
     live: "Actif",
     offline: "Pas encore actif",
+    signInToStart: "Connectez-vous pour commencer",
     page: {
       title: "Profil vérifié",
       subtitle: "Vérifiez votre identité pour modifier votre profil officiel sur rout.be/:handle.",
@@ -231,6 +235,7 @@ export const HUB_COPY: Record<"nl" | "en" | "fr" | "de", HubCopy> = {
     upcoming: "Kommende Integrationen",
     live: "Aktiv",
     offline: "Noch nicht aktiv",
+    signInToStart: "Zum Starten anmelden",
     page: {
       title: "Verifiziertes Profil",
       subtitle: "Verifiziere deine Identität, um dein offizielles Profil auf rout.be/:handle zu bearbeiten.",

@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Crown, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { Link } from "@/lib/router-compat";
+import { Link, useNavigate } from "@/lib/router-compat";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { VerifiedIdentityIcon } from "@/components/profile/VerifiedIdentityIcon";
 import { DiditVerificationModal } from "@/components/kyc/DiditVerificationModal";
@@ -34,6 +34,7 @@ export default function VerifyGuide() {
   const start = useServerFn(startIdentityVerification);
   const [diditOpen, setDiditOpen] = useState(false);
   const [busy, setBusy] = useState<ProviderEngine | null>(null);
+  const navigate = useNavigate();
 
   const s = status.data;
   const verified = Boolean(s?.tier2LegalIdentity);
@@ -47,6 +48,7 @@ export default function VerifyGuide() {
   );
 
   async function go(engine: ProviderEngine) {
+    if (!user) return void navigate({ to: "/auth/sign-in" });
     if (engine === "didit") return setDiditOpen(true);
     setBusy(engine);
     try {
@@ -93,7 +95,7 @@ export default function VerifyGuide() {
         </header>
 
         <div className="mt-8">
-          <ProviderDiscoveryHub active={active} busy={busy} onStart={(e) => void go(e)} />
+          <ProviderDiscoveryHub active={active} signedOut={!loading && !user} busy={busy} onStart={(e) => void go(e)} />
         </div>
 
         <section aria-label={c.page.badgesTitle} className="mt-10 border-t border-border pt-6">
