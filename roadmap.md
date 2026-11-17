@@ -393,4 +393,12 @@
 - [ ] Productie opnieuw uitrollen en in Vercel controleren dat de functieregio fra1 is — eigenaar
 - [ ] Wachtwoord van neondb_owner vernieuwen (opnieuw in de chat gedeeld) — eigenaar
 - [ ] HTTP-driver van @neondatabase/serverless — niet gedaan: botst met de regel "alleen postgres-driver"; wacht op besluit eigenaar
-- [ ] Minder rondes per query en last_sign_in_at hooguit eens per uur — voorstel, wacht op akkoord
+- [x] Minder rondes per query en last_sign_in_at hooguit eens per uur — GO eigenaar 2026-11-17, zie hieronder
+
+## Opdracht eigenaar 2026-11-17 16:45 UTC — GO query-optimalisatie profiel
+- [x] Elke databasevraag gaat als één gebundeld pakket (één heen-en-terug in plaats van ~8); lokaal gemeten bij 80 ms vertraging: 670 ms → 86 ms
+- [x] Profielstudio openen: profiel, aliasnaam, blauw schild en concept in één databaseronde (88 ms bij 80 ms vertraging); alleen de allereerste keer maakt het concept twee extra rondes
+- [x] last_sign_in_at hooguit eens per uur, op de klok van de database (geen geheugen of cookie nodig)
+- [x] JSON-waarden komen niet meer dubbel verpakt in de database (gevonden tijdens de meting)
+- [ ] Sessiecontrole van Better Auth zelf (sessie + gebruiker) blijft aparte rondes — niet in deze opdracht
+

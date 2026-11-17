@@ -78,6 +78,9 @@ use the editor.
 ## Neon database access
 - Runtime DB = DATABASE_URL only (postgres driver, TLS forced); scripts use scripts/db-direct.ts; build target: scripts/nitro-target.ts (no vercel.json rewrites). Why: owner runs on own infrastructure, no vendor path.
 
+## Database round trips
+- runBatch sends role switch, context, guard and statements as one postgres.js sql.batch (one Sync, implicit transaction); scalar params bind as oid 705 (unknown) and JSON text passes to json(b) unencoded. Why: one network round trip per request without weakening the RLS prefix, and no double-encoded JSON.
+
 ## Migration history
 - Every row in public.schema_migrations must match a file in db/ or an entry in scripts/migration-history-allowlist.ts carrying Neon's exact checksum; check with scripts/migration-history-check.ts and never rewrite Neon's rows. Why: history drift stays visible without falsifying what actually ran.
 - A migration redefining a CHECK keeps every value existing functions write, and its replay test runs each writer. Why: 0267 once dropped 'activation'.
