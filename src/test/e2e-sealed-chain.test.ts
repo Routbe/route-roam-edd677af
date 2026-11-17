@@ -178,7 +178,11 @@ describe("sealed request: visitor -> worker -> server -> Neon -> host Studio", (
     expect(rows).toHaveLength(1);
     expect(rows[0]!["encrypted_rve1_payload"]).toBe(request.sealed.envelope);
     expect(rows[0]!["pow_nonce"]).toBe(request.pow.nonce);
-    expect(JSON.stringify(rows[0])).not.toMatch(/Ada|example\.com|allergie/);
+    // Random base64url ciphertext and proof-of-work values can contain any three letters by
+    // chance (about 1 run in 60), so the plaintext check covers every other column.
+    const { encrypted_rve1_payload: _ct, pow_nonce: _n, pow_challenge: _c, ...plainColumns } = rows[0]!;
+    expect(JSON.stringify(plainColumns)).not.toMatch(/Ada|example\.com|allergie/);
+    expect(new TextDecoder().decode(b64uDecode(String(_ct))!)).not.toMatch(/Ada|example\.com|allergie/);
   });
 
   it("5. the same proof cannot be used twice", async () => {
