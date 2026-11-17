@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import { createHmac } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -13,6 +14,8 @@ const db = vi.hoisted(() => ({
   ctx: null as string | null,
 }));
 const didit = vi.hoisted(() => ({ decision: null as unknown, fail: false }));
+/** Canonical anchors handed out by canonical-id, and whether they were wiped when Neon was first written. */
+const cap = vi.hoisted(() => ({ anchors: [] as { bytes: Uint8Array }[], wipedAtAttest: null as boolean | null }));
 
 vi.mock("@/lib/neon", () => {
   const run = async (query: string, params: unknown[]) => {
@@ -22,7 +25,10 @@ vi.mock("@/lib/neon", () => {
       return s ? [s] : [];
     }
     if (/rout_didit_usage_bump/.test(query)) return [{ ok: db.bump }];
-    if (/rout_kyc_attest/.test(query)) return [{ code: db.attestCode }];
+    if (/rout_kyc_attest/.test(query)) {
+      cap.wipedAtAttest = cap.anchors.length > 0 && cap.anchors.every((a) => a.bytes.every((b) => b === 0));
+      return [{ code: db.attestCode }];
+    }
     if (/insert into public.identity_verifications/.test(query)) {
       if (db.insertError) throw Object.assign(new Error("temporary"), db.insertError);
       db.verified = true;
@@ -68,6 +74,17 @@ vi.mock("@/lib/identity/identity.server", () => ({
   },
 }));
 vi.mock("@/lib/schema-features.server", () => ({ hasSchemaFeature: async () => true }));
+vi.mock("./canonical-id", async (importOriginal) => {
+  const real = await importOriginal<typeof import("./canonical-id")>();
+  return {
+    ...real,
+    canonicalAnchors: (claims: Parameters<typeof real.canonicalAnchors>[0]) => {
+      const out = real.canonicalAnchors(claims);
+      cap.anchors.push(...out);
+      return out;
+    },
+  };
+});
 vi.mock("./didit-client.server", () => {
   class DiditError extends Error {
     constructor(readonly code: string, readonly status: number) { super(code); }
@@ -112,6 +129,9 @@ let logs: string[] = [];
 beforeEach(() => {
   process.env["DIDIT_WEBHOOK_SECRET"] = SECRET;
   process.env["IDENTITY_HASH_PEPPER"] = PEPPER;
+  delete process.env["PEPPER_SECRET"];
+  cap.anchors = [];
+  cap.wipedAtAttest = null;
   db.calls = [];
   db.sessions = new Map([[STATE, { user_id: USER }]]);
   db.attestCode = "ok";
@@ -204,6 +224,56 @@ describe("Didit webhook", () => {
     didit.decision = decisionFor("rk1.other");
     expect(await (await handleDiditWebhook(signed(event(ref)))).json()).toEqual({ ok: true, result: "no_document" });
     expect(db.verified).toBe(false);
+  });
+
+  it("hashes Node.js Buffer anchors and zero-fills them with fill(0) before the first database write", async () => {
+    const ref = sealVendorRef(USER, STATE, PEPPER);
+    didit.decision = decisionFor(ref);
+    expect(await (await handleDiditWebhook(signed(event(ref)))).json()).toEqual({ ok: true, result: "verified" });
+    expect(cap.anchors).toHaveLength(2);
+    for (const a of cap.anchors) expect(Buffer.isBuffer(a.bytes)).toBe(true);
+    expect(cap.wipedAtAttest).toBe(true);
+  });
+
+  it("reads the webhook body into a Buffer and zero-fills it, also when the signature fails", async () => {
+    const seen: Buffer[] = [];
+    const from = Buffer.from.bind(Buffer);
+    vi.spyOn(Buffer, "from").mockImplementation(((...args: Parameters<typeof Buffer.from>) => {
+      const b = (from as (...a: unknown[]) => Buffer)(...args);
+      if (args[0] instanceof ArrayBuffer) seen.push(b);
+      return b;
+    }) as typeof Buffer.from);
+    const ref = sealVendorRef(USER, STATE, PEPPER);
+    didit.decision = decisionFor(ref);
+    await handleDiditWebhook(signed(event(ref)));
+    await handleDiditWebhook(signed(event(ref), { sig: "0".repeat(64) }));
+    expect(seen.length).toBeGreaterThanOrEqual(2);
+    for (const b of seen) {
+      expect(b.length).toBeGreaterThan(0);
+      expect(b.every((x) => x === 0)).toBe(true);
+    }
+  });
+
+  it("accepts PEPPER_SECRET instead of IDENTITY_HASH_PEPPER and derives the same nullifiers", async () => {
+    const ref = sealVendorRef(USER, STATE, PEPPER);
+    didit.decision = decisionFor(ref);
+    await handleDiditWebhook(signed(event(ref)));
+    const first = db.calls.find((c) => /rout_kyc_attest/.test(c.query))!.params[0];
+
+    delete process.env["IDENTITY_HASH_PEPPER"];
+    process.env["PEPPER_SECRET"] = PEPPER;
+    db.calls = [];
+    db.verified = false;
+    db.sessions.set(STATE, { user_id: USER });
+    expect(await (await handleDiditWebhook(signed(event(ref)))).json()).toEqual({ ok: true, result: "verified" });
+    expect(db.calls.find((c) => /rout_kyc_attest/.test(c.query))!.params[0]).toEqual(first);
+  });
+
+  it("refuses to run with two different peppers", async () => {
+    process.env["PEPPER_SECRET"] = `${PEPPER}-other`;
+    const ref = sealVendorRef(USER, STATE, PEPPER);
+    expect((await handleDiditWebhook(signed(event(ref)))).status).toBe(503);
+    expect(db.calls).toEqual([]);
   });
 
   it("is not configured without the webhook secret", async () => {
