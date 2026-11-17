@@ -36,13 +36,17 @@ describe("one-file rollout batch (0277)", () => {
   const newFns = async () =>
     // 0277: policy helpers the account-merge executor may run (0 before, 6 after).
     (await db.query<{ n: number }>("select count(*)::int as n from unnest(array['public.rout_is_workspace_member(uuid)', 'public.rout_tenant_ref_kept(text,uuid,uuid)', 'public.current_app_user_id()', 'public.rout_workspace_claimable(uuid)', 'public.rout_workspace_role(uuid)', 'public.rout_caller_is_admin()']) f where has_function_privilege('rout_merge_executor', f, 'EXECUTE')")).rows[0]!.n;
+  const all = listMigrationFiles(DIR);
+  const before = all.slice(0, all.indexOf(FILE));
+  const later = all.slice(all.indexOf(FILE) + 1);
   const recorded = async () => (await db.query<{ checksum: string }>("select checksum from public.schema_migrations where filename = $1", [FILE])).rows;
 
   beforeAll(async () => {
     const { btree_gist } = await import("@electric-sql/pglite/contrib/btree_gist");
     const { pgcrypto } = await import("@electric-sql/pglite/contrib/pgcrypto");
     db = await PGlite.create({ extensions: { pgcrypto, btree_gist } });
-    const files = listMigrationFiles(DIR).filter((f) => f !== FILE);
+    // Neon's order: everything before 0277, the rollout of 0277, then the later files.
+    const files = before;
     for (const step of planMigrations(files, new Set())) {
       if (step.action === "run") await db.exec(`begin;\n${readFileSync(join(DIR, step.file), "utf8")}\n;commit;`);
     }
@@ -72,6 +76,9 @@ describe("one-file rollout batch (0277)", () => {
     expect(rows[1]).toEqual([{ applied: checksumOf(BODY) }]);
     expect(await recorded()).toEqual([{ checksum: checksumOf(BODY) }]);
     expect(await newFns()).toBe(6);
+    for (const step of planMigrations(later, new Set())) {
+      if (step.action === "run") await db.exec(`begin;\n${readFileSync(join(DIR, step.file), "utf8")}\n;commit;`);
+    }
     const catalog = await readCatalog(async (q) => (await db.query<Record<string, unknown>>(q)).rows);
     expect(catalogJson(catalog)).toBe(readFileSync(join(DIR, "schema.snapshot.json"), "utf8"));
     expect((await db.query("select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace where p.proname = 'rout_rollout'")).rows).toEqual([]);
