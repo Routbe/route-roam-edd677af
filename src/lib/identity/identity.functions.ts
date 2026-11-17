@@ -32,7 +32,6 @@ export const startIdentityVerification = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ provider: z.enum(["w_identity", "didit"]), origin: z.string().url() }).parse(d))
   .handler(async ({ data, context }): Promise<{ ok: true; url: string } | { ok: false; reason: string }> => {
     const id = await import("./identity.server");
-    const { diditAvailable } = await import("./identity-rules");
     if (!id.providerConfigured(data.provider)) return { ok: false, reason: "not_configured" };
     const { verificationDecision } = await import("./identity-tiers");
     if (verificationDecision(await id.getIdentityStatus(context.userId), data.provider) === "reject") {
@@ -65,11 +64,4 @@ export const startIdentityVerification = createServerFn({ method: "POST" })
     const { startDiditKyc } = await import("@/lib/kyc/kyc-engine.server");
     const res = await startDiditKyc(context.userId, origin);
     return res.ok ? { ok: true, url: res.session_url } : { ok: false, reason: res.reason };
-  });
-    if (!res.ok) {
-      console.error(`[identity] Didit session failed [${res.status}]: ${await res.text()}`);
-      return { ok: false, reason: "provider_error" };
-    }
-    const body = (await res.json()) as { url?: string };
-    return body.url ? { ok: true, url: body.url } : { ok: false, reason: "provider_error" };
   });
