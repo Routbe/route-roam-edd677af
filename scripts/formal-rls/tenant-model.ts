@@ -73,6 +73,10 @@ export const CLOSED_BY_0277: ReadonlyArray<{ id: string; reason: string }> = [
 const ORACLE_OPEN = "personal or externally known identifier: a duplicate-key error tells whether another member holds it; fix by moving writes into a definer that answers uniformly";
 export const KNOWN_OPEN: ReadonlyArray<{ id: string; reason: string }> = [
   ...["users(email_normalized)", "profiles(stripe_account_id)", "identity_links(issuer,provider_sub)", "user_identities(provider,provider_account_id)", "user_linked_accounts(platform,provider_account_id)", "user_snapchat(external_id)", "identity_relays(proxy_email)", "identity_verifications(unique_human_id)"].map((k) => ({ id: `oracle:${k}`, reason: `F6 ${ORACLE_OPEN}` })),
+  // Opened by db/0287 (A1 EXPAND, live 2026-11-17), still open: needs the A1 CONTRACT or an owner decision.
+  { id: "rls:public.profiles:SELECT:using", reason: "F1-A1 db/0287 grants rout_app SELECT on the 11 *_sealed and 5 *_bidx columns, so the public-read policy hands every member's ciphertext and blind indexes to rout_app. Ciphertext opens only with ROUT_VAULT_KEK (server env, never in SQL); blind indexes still show which profiles share a value. Close by reading them through own-row/admin definers before the A1 CONTRACT" },
+  { id: "oracle:profiles(stripe_account_id_bidx)", reason: `F6-A1 keyed index of the same Stripe account id as profiles(stripe_account_id); ${ORACLE_OPEN}` },
+  { id: "oracle:profiles(forwarding_email_token_bidx)", reason: `F6-A1 keyed index of the forwarding token; ${ORACLE_OPEN}` },
 ];
 
 /**

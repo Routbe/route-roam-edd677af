@@ -65,7 +65,8 @@ describe("Z3 proof over the 0275 schema snapshot", () => {
   });
 
   it("vault_enclave is closed and every SECURITY DEFINER pins pg_catalog, pg_temp", () => {
-    expect(report.enclave.tables).toBe(32);
+    // 33 since db/0287 (vault_enclave.profile_field_keys).
+    expect(report.enclave.tables).toBe(33);
     expect(report.enclave.findings).toEqual([]);
     expect(report.searchPath.definers).toBeGreaterThan(400);
     expect(report.searchPath.findings).toEqual([]);
