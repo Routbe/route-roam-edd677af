@@ -1,4 +1,4 @@
--- 0289: account merge after 0287/0288 (EXPAND, additive; nothing is revoked).
+-- 0289: account merge after 0287/0288 (EXPAND, additive; nothing is revoked). Held in db-pending/ until the owner's "GO 0289".
 --
 -- Found after 0287 and 0288 went live (2026-11-17): execute_account_merge (db/0152) runs as
 -- rout_merge_executor, which updates public.profiles but had no EXECUTE on
