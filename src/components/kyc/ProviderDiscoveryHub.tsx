@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Building2, ChevronDown, Loader2, Search, ShieldCheck } from "lucide-react";
 import { hubCopy } from "@/lib/kyc/hub-copy";
@@ -175,7 +175,7 @@ function ActiveCard({
 function ProviderMark({ provider: p, size }: { provider: IdentityProviderEntry; size: "sm" | "lg" }) {
   const box = size === "lg" ? "h-10 w-10 rounded-xl" : "h-8 w-8 rounded-lg";
   const icon = size === "lg" ? "h-5 w-5" : "h-4 w-4";
-  let mark: React.ReactNode;
+  let mark: ReactNode;
   if (p.id === "didit") {
     mark = (
       <svg viewBox="0 0 24 24" className={icon} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>

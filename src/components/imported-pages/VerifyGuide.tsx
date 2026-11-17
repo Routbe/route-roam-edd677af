@@ -1,124 +1,117 @@
-import { BadgeCheck, Building2, CreditCard, Fingerprint } from "lucide-react";
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+import { Check, Crown, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import { Link } from "@/lib/router-compat";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { HumanLinkedIcon } from "@/components/profile/HumanLinkedIcon";
-import { FleurDeLisIcon } from "@/components/profile/EarlyBelieverBadge";
+import { VerifiedIdentityIcon } from "@/components/profile/VerifiedIdentityIcon";
+import { DiditVerificationModal } from "@/components/kyc/DiditVerificationModal";
+import { ProviderDiscoveryHub } from "@/components/kyc/ProviderDiscoveryHub";
+import { useAuth } from "@/hooks/useAuth";
 import { useI18n } from "@/lib/i18n";
+import { hubCopy } from "@/lib/kyc/hub-copy";
+import type { ProviderEngine } from "@/lib/kyc/providers";
+import { getMyIdentityStatus, startIdentityVerification } from "@/lib/identity/identity.functions";
+
+const PRIMARY =
+  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-6 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-40 sm:w-auto";
 
 /**
- * Publieke uitleg over de drie merktekens die ROUT uitdeelt.
- *
- * De iconen komen uit dezelfde componenten als het publieke profiel, zodat de
- * uitleg altijd hetzelfde toont als wat een bezoeker echt te zien krijgt.
+ * /verify — "Geverifieerd profiel": one primary action (Didit KYC), the integrated engines as
+ * active cards and every other provider folded away. Signed-out visitors see the same page; the
+ * action sends them to sign-in first. Badge rules: blue = KYC, green = zero-knowledge only, crown = support.
  */
-
-const STEP_KEYS = [
-  { icon: CreditCard, title: "verify.step1.title", body: "verify.step1.body" },
-  { icon: Building2, title: "verify.step2.title", body: "verify.step2.body" },
-  { icon: BadgeCheck, title: "verify.step3.title", body: "verify.step3.body" },
-] as const;
-
-const CARD = "rounded-2xl border border-border bg-card/60 p-6 shadow-sm";
-
 export default function VerifyGuide() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n() as ReturnType<typeof useI18n> & { lang?: string };
+  const c = hubCopy(lang ?? "nl");
+  const { user, loading } = useAuth();
+  const status = useQuery({
+    queryKey: ["identity-status"],
+    queryFn: useServerFn(getMyIdentityStatus),
+    enabled: Boolean(user),
+  });
+  const start = useServerFn(startIdentityVerification);
+  const [diditOpen, setDiditOpen] = useState(false);
+  const [busy, setBusy] = useState<ProviderEngine | null>(null);
+
+  const s = status.data;
+  const verified = Boolean(s?.tier2LegalIdentity);
+  const active = new Set<ProviderEngine>(
+    user
+      ? [
+          ...(s?.diditConfigured && s?.diditAvailable && !verified ? (["didit"] as const) : []),
+          ...(s?.wConfigured && !s?.tier1RealHuman ? (["w_identity"] as const) : []),
+        ]
+      : [],
+  );
+
+  async function go(engine: ProviderEngine) {
+    if (engine === "didit") return setDiditOpen(true);
+    setBusy(engine);
+    try {
+      const res = await start({ data: { provider: engine, origin: window.location.origin } });
+      if (res.ok) window.location.assign(res.url);
+      else toast.error(c.errors.provider_error);
+    } catch {
+      toast.error(c.errors.provider_error);
+    } finally {
+      setBusy(null);
+    }
+  }
 
   const marks = [
-    {
-      key: "blue",
-      mark: <BadgeCheck className="h-6 w-6 text-[#1d9bf0]" aria-hidden />,
-      title: t("verify.badge.blue.title"),
-      body: t("verify.badge.blue.body"),
-      where: t("verify.badge.blue.where"),
-    },
-    {
-      key: "shield",
-      mark: <HumanLinkedIcon className="h-6 w-6 text-foreground/80" aria-hidden />,
-      title: t("verify.badge.shield.title"),
-      body: t("verify.badge.shield.body"),
-      where: t("verify.badge.shield.where"),
-    },
-    {
-      key: "early",
-      mark: <FleurDeLisIcon className="h-6 w-6 text-amber-500" />,
-      title: t("verify.badge.early.title"),
-      body: t("verify.badge.early.body"),
-      where: t("verify.badge.early.where"),
-    },
+    { key: "blue", icon: <VerifiedIdentityIcon className="h-5 w-5" />, title: c.page.blue, body: c.page.blueBody },
+    { key: "green", icon: <ShieldCheck className="h-5 w-5 text-identity-human" aria-hidden />, title: c.page.green, body: c.page.greenBody },
+    { key: "crown", icon: <Crown className="h-5 w-5 text-identity-supporter" strokeWidth={1.75} aria-hidden />, title: c.page.crown, body: c.page.crownBody },
   ];
 
   return (
     <AppLayout crumbs={[{ label: t("verify.crumb") }]}>
-      <div className="mx-auto max-w-3xl px-6 py-12 sm:py-20">
-        <span className="eyebrow">{t("verify.eyebrow")}</span>
-        <h1 className="mb-3 mt-2 font-serif text-4xl font-medium tracking-tight sm:text-5xl">
-          {t("verify.title")}
-        </h1>
-        <p className="mb-12 border-b-2 border-dashed border-border-ink/25 pb-8 font-sans text-lg text-muted-foreground">
-          {t("verify.intro")}
-        </p>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          {marks.map((mark) => (
-            <section key={mark.key} className={CARD}>
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background">
-                {mark.mark}
+      <div className="mx-auto max-w-2xl px-4 pb-16 pt-6 sm:px-6 sm:pt-12">
+        <header className="space-y-3">
+          <h1 className="font-serif text-3xl font-medium tracking-tight sm:text-4xl">{c.page.title}</h1>
+          <p className="text-[15px] leading-relaxed text-muted-foreground">{c.page.subtitle}</p>
+          {/* Fixed-height slot: the button never moves when the session resolves (no layout shift). */}
+          <div className="min-h-12 pt-1">
+            {loading ? (
+              <span className={`${PRIMARY} pointer-events-none opacity-40`} aria-hidden>{c.page.cta}</span>
+            ) : !user ? (
+              <Link to="/auth/sign-in" className={PRIMARY}>{c.page.cta}</Link>
+            ) : verified ? (
+              <span role="status" className={`${PRIMARY} bg-transparent text-foreground ring-1 ring-border`}>
+                <Check className="h-4 w-4" aria-hidden /> {c.page.ctaDone}
               </span>
-              <h2 className="mt-4 font-serif text-xl font-semibold text-foreground">
-                {mark.title}
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{mark.body}</p>
-              <p className="mt-3 font-mono text-[11px] text-muted-foreground">{mark.where}</p>
-            </section>
-          ))}
+            ) : (
+              <button type="button" className={PRIMARY} onClick={() => setDiditOpen(true)} disabled={status.isLoading || !active.has("didit")}>
+                {c.page.cta}
+              </button>
+            )}
+          </div>
+          {!loading && !user && <p className="text-xs text-muted-foreground">{c.page.signIn}</p>}
+          {user && s && !verified && !active.has("didit") && <p className="text-xs text-muted-foreground">{c.errors.not_configured}</p>}
+        </header>
+
+        <div className="mt-8">
+          <ProviderDiscoveryHub active={active} busy={busy} onStart={(e) => void go(e)} />
         </div>
 
-        <h2 className="mb-4 mt-12 font-serif text-2xl font-semibold text-foreground">
-          {t("verify.steps.title")}
-        </h2>
-        <ol className="space-y-4">
-          {STEP_KEYS.map(({ icon: Icon, ...step }, index) => (
-            <li key={step.title} className={`flex gap-4 ${CARD} p-5`}>
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-background font-mono text-xs">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <div>
-                <h3 className="flex items-center gap-2 font-serif text-lg font-semibold text-foreground">
-                  <Icon className="h-4 w-4 text-muted-foreground" aria-hidden />
-                  {t(step.title)}
-                </h3>
-                <p className="mt-1 text-[15px] leading-relaxed text-muted-foreground">
-                  {t(step.body)}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ol>
-
-        <section className="mt-10 rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="flex items-center gap-2 font-serif text-xl font-semibold text-foreground">
-            <Fingerprint className="h-4 w-4 text-muted-foreground" aria-hidden />
-            {t("verify.keep.title")}
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            {t("verify.keep.body")}
-          </p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link
-              to="/auth/sign-in"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-foreground px-6 text-sm font-medium text-background transition-opacity hover:opacity-90"
-            >
-              {t("verify.cta.start")}
-            </Link>
-            <Link
-              to="/privacy"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-border px-6 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-            >
-              {t("verify.cta.privacy")}
-            </Link>
-          </div>
+        <section aria-label={c.page.badgesTitle} className="mt-10 border-t border-border pt-6">
+          <h2 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{c.page.badgesTitle}</h2>
+          <ul className="mt-3 divide-y divide-border">
+            {marks.map((m) => (
+              <li key={m.key} className="flex items-center gap-3 py-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-background">{m.icon}</span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">{m.title}</p>
+                  <p className="text-xs text-muted-foreground">{m.body}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </section>
       </div>
+      <DiditVerificationModal open={diditOpen} onOpenChange={setDiditOpen} />
     </AppLayout>
   );
 }
