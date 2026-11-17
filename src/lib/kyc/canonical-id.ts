@@ -10,11 +10,14 @@
  *
  * The personal-number anchor comes first when present: it is the same for a passport and an ID
  * card of one person, and for every provider (itsme and Didit both read the Belgian national number).
- * Anchors are returned as bytes so the caller can zero-fill them after hashing.
+ * Anchors are returned as unpooled Node.js Buffers so the caller can zero-fill them after hashing.
  */
 
+import type { Buffer } from "node:buffer";
+import { secretBuffer } from "./secure-buffer";
+
 export type AnchorKind = "personal_number" | "document";
-export type CanonicalAnchor = { kind: AnchorKind; bytes: Uint8Array };
+export type CanonicalAnchor = { kind: AnchorKind; bytes: Buffer };
 
 export type DocumentClaims = {
   issuingState?: string | null;
@@ -71,7 +74,6 @@ export function documentClass(input: string | null | undefined): "P" | "I" | "R"
 
 const MIN_LEN = 5;
 const MAX_LEN = 32;
-const enc = new TextEncoder();
 
 /** Canonical anchors, personal number first; [] when the claims cannot anchor an identity. */
 export function canonicalAnchors(claims: DocumentClaims): CanonicalAnchor[] {
@@ -80,13 +82,13 @@ export function canonicalAnchors(claims: DocumentClaims): CanonicalAnchor[] {
   const out: CanonicalAnchor[] = [];
   const pn = canonicalValue(claims.personalNumber);
   if (!NON_STATE.has(issuer) && pn.length >= MIN_LEN + 1 && pn.length <= MAX_LEN) {
-    out.push({ kind: "personal_number", bytes: enc.encode(`${issuer}:PN:${pn}`) });
+    out.push({ kind: "personal_number", bytes: secretBuffer(`${issuer}:PN:${pn}`) });
   }
   const doc = canonicalValue(claims.documentNumber);
   if (doc.length >= MIN_LEN && doc.length <= MAX_LEN) {
     const cls = documentClass(claims.documentType);
     // A personal number repeated as document number (some ID cards) is one anchor, not two.
-    if (!(out.length && doc === pn)) out.push({ kind: "document", bytes: enc.encode(`${issuer}:${cls}:${doc}`) });
+    if (!(out.length && doc === pn)) out.push({ kind: "document", bytes: secretBuffer(`${issuer}:${cls}:${doc}`) });
   }
   return out;
 }
