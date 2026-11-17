@@ -393,13 +393,13 @@ export const NAME_ACCENTS: { id: NameAccent; label: string }[] = [
 export const BADGE_TYPES: { id: BadgeType; label: string; note: string }[] = [
   {
     id: "verified",
-    label: "Blauw vinkje",
-    note: "Bevestigt je identiteit: volledige naam en land (bv. BE).",
+    label: "Blauw schild — KYC Attested",
+    note: "Na een KYC-attestatie (Didit/eIDAS). ROUT bewaart geen naam of documentnummer.",
   },
   {
     id: "human",
-    label: "Privacy-schild",
-    note: "Bevestigt: echte mens, zonder je naam te tonen.",
+    label: "Groen schild — Real Human",
+    note: "Alleen na een zero-knowledge-bewijs van menselijkheid; zonder dat toont je profiel het blauwe schild.",
   },
   {
     id: "domain",

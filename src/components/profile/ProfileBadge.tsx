@@ -16,8 +16,8 @@ import {
 /**
  * Eén badge, drie betekenissen — vrij te kiezen (of weg te laten):
  *
- *  • `verified` — blauw vinkje: identiteit bevestigd (volledige naam + land)
- *  • `human`    — privacy-schild: bevestigd mens, naam blijft privé
+ *  • `verified` — blauw schild "KYC Attested": uitsluitend na een KYC-attestatie (Didit/eIDAS)
+ *  • `human`    — groen schild "Real Human": uitsluitend na een zero-knowledge-bewijs
  *  • `domain`   — zwarte domeinbadge: domeinnaam geclaimd via de DNS-zone
  *  • `none`     — geen badge
  *
@@ -83,7 +83,7 @@ export function ProfileBadge({
     type === "domain" ? (
       <DomainBadgeIcon className={`${iconSize} ${extra}`} />
     ) : type === "human" ? (
-      <ShieldCheck className={`${iconSize} ${extra}`} aria-hidden />
+      <ShieldCheck className={`${iconSize} text-identity-human ${extra}`} aria-hidden />
     ) : type === "influencer" ? (
       <CreatorBadgeIcon className={`${iconSize} ${extra}`} />
     ) : (

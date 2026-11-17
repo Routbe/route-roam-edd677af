@@ -281,7 +281,7 @@ export function ProfileView({
     ? Boolean(profile.human_linked) && prefs.humanBadgeVisible
     : // Blauw "KYC Attested"-schild: uitsluitend na een KYC-attestatie (Didit/eIDAS). Het groene
       // schild op de rootpagina vraagt een eigen zero-knowledge-bewijs.
-      prefs.badgeVisible && prefs.badgeType !== "none" && (prefs.badgeType === "human" ? zkHuman || kycAttested : kycAttested);
+      prefs.badgeVisible && prefs.badgeType !== "none" && (kycAttested || (zkHuman && prefs.badgeType === "human" && !profile.is_business && !profile.is_influencer));
   // Supporter/Pro: aparte, discrete kroon — los van identiteit, alleen op de rootpagina.
   const showSupporter = !free && !publicPath?.startsWith("/w/") && showsSupporterCrown({ isPro: profile.is_pro === true, supporterBadgeVisible: prefs.supporterBadgeVisible });
   /**
