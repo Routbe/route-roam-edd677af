@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render } from "@testing-library/react";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { PROVIDERS } from "@/lib/kyc/providers";
+import { IDENTITY_PROVIDERS as PROVIDERS } from "@/lib/kyc/providers";
 import { ProviderLogo } from "./ProviderLogo";
 import { INLINE_PROVIDER_LOGOS, PROVIDER_LOGO_FILES } from "./provider-logos";
 
