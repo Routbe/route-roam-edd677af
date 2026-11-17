@@ -71,8 +71,8 @@ function toStudioProfile(row: Row): StudioProfile {
   };
 }
 
-export async function readStudioProfile(userId: string): Promise<StudioProfile | null> {
-  const rows = (await sql`
+function profileQuery(userId: string) {
+  return sql`
     select username, display_name, tagline, avatar_url, favicon_url, theme, card_style,
            blocks, verified, status, verified_legal_name,
            coalesce(profiles.is_paid, false) as is_paid, profiles.tier::text as tier,
@@ -85,7 +85,51 @@ export async function readStudioProfile(userId: string): Promise<StudioProfile |
       from public.profiles
      where id = ${userId}
      limit 1
-  `) as Row[];
+  `;
+}
+
+/**
+ * Profile, alias handle, blue identity mark and (optionally) the private draft in
+ * one pipelined batch: one database round trip. The Studio needs only the blue
+ * "KYC Attested" answer, never real_human, so no schema detection is involved.
+ * A schema without the alias table or badge function fails the whole batch; the
+ * sequential, tolerant read then answers exactly as before.
+ */
+export async function readStudioOpening(
+  userId: string,
+  draftSpace: "verified" | null,
+): Promise<{ live: StudioProfile; draft: Row | null | undefined } | null> {
+  let results: Row[][];
+  try {
+    const { profileDraftQuery } = await import("./profile-drafts.server");
+    results = (await sql.transaction([
+      profileQuery(userId),
+      sql`select handle from public.alias_profiles where user_id = ${userId} limit 1`,
+      sql`select user_id, didit_legal_identity
+            from public.rout_public_identity_badges(array[${userId}::uuid])`,
+      ...(draftSpace ? [profileDraftQuery(userId, draftSpace)] : []),
+    ])) as Row[][];
+  } catch (error) {
+    const code = (error as { code?: unknown })?.code;
+    console.warn("[studio-profile] batched read fell back to separate reads", { code: typeof code === "string" ? code : undefined });
+    const live = await readStudioProfileSeparately(userId);
+    return live ? { live, draft: undefined } : null;
+  }
+  const [profileRows = [], aliasRows = [], badgeRows = [], draftRows = []] = results;
+  const row = profileRows[0];
+  if (!row) return null;
+  row["alias_handle"] = aliasRows[0]?.["handle"] ?? null;
+  row["didit_verified"] = badgeRows.some((r) => String(r["user_id"]) === userId && r["didit_legal_identity"] === true);
+  return { live: toStudioProfile(row), draft: draftSpace ? (draftRows[0] ?? null) : undefined };
+}
+
+export async function readStudioProfile(userId: string): Promise<StudioProfile | null> {
+  return (await readStudioOpening(userId, null))?.live ?? null;
+}
+
+/** The pre-batch read: each part on its own, alias and identity mark tolerant. */
+async function readStudioProfileSeparately(userId: string): Promise<StudioProfile | null> {
+  const rows = (await profileQuery(userId)) as Row[];
   const row = rows[0];
   if (!row) return null;
   // Het aliasprofiel is een apart record; tolerant wanneer migratie 38 ontbreekt.

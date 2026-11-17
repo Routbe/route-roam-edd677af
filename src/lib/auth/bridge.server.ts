@@ -71,7 +71,9 @@ async function bridgeAs(identity: RoutIdentity, authId: string, memberId: string
   const { toSessionUser } = await import("@/lib/auth/session.server");
   const existing = (await sql`
     select id, email, email_confirmed_at, user_metadata, app_metadata, created_at,
-           last_sign_in_at, is_disabled
+           last_sign_in_at, is_disabled,
+           (last_sign_in_at is null
+             or last_sign_in_at <= now() - interval '1 hour') as sign_in_stale
       from public.users
      where id = ${memberId}
      limit 1
@@ -97,9 +99,16 @@ async function bridgeAs(identity: RoutIdentity, authId: string, memberId: string
                auth_user_id = coalesce(auth_user_id, ${identity.id}::uuid)
          where id = ${row["id"] as string}
       `;
-    } else {
-      await sql`update public.users set last_sign_in_at = now() where id = ${row["id"] as string}`;
+    } else if (row["sign_in_stale"] === true) {
+      // At most one write per hour per member, judged on the database clock, so
+      // every server instance agrees; the WHERE stops concurrent requests writing twice.
+      await sql`
+        update public.users set last_sign_in_at = now()
+         where id = ${row["id"] as string}
+           and (last_sign_in_at is null or last_sign_in_at <= now() - interval '1 hour')
+      `;
     }
+    delete row["sign_in_stale"];
   } else {
     // A first-time member row is created only for an identity that already owns a
     // passkey (passkey sign-up) or an OPAQUE password record (password sign-up, db/0270).

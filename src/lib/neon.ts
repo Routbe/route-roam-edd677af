@@ -4,7 +4,8 @@
  *
  * `sql` mimics the @neondatabase/serverless HTTP client surface used across the
  * app: tagged templates, `sql.query(text, params)`, `sql.unsafe(raw)` and
- * `sql.transaction([...])`. One call = one HTTP request (no session state).
+ * `sql.transaction([...])`. One call = one pipelined batch, one network round trip
+ * (no session state).
  */
 
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -62,12 +63,17 @@ end $guard$`;
 /** Dates and timestamps stay strings, as the app has always received them. */
 const TEXT_TYPES = [1082, 1083, 1114, 1184, 1266];
 let pool: { url: string; client: postgres.Sql } | null = null;
+export const jsonText = (v: unknown): string => (typeof v === "string" ? v : JSON.stringify(v));
 function client(connectionString: string): postgres.Sql {
   if (pool?.url === connectionString) return pool.client;
   void pool?.client.end({ timeout: 5 });
-  const types = Object.fromEntries(TEXT_TYPES.map((oid) => [`t${oid}`, {
+  const types: Record<string, unknown> = Object.fromEntries(TEXT_TYPES.map((oid) => [`t${oid}`, {
     to: oid, from: [oid], serialize: (v: unknown) => String(v), parse: (v: string) => v,
   }]));
+  // A string bound to a json(b) parameter already is JSON text (normaliseParams
+  // and every caller use JSON.stringify); the driver's default would encode it a
+  // second time into a JSON string. Same result as an untyped (unknown) parameter.
+  types.json = { to: 3802, from: [114, 3802], serialize: jsonText, parse: (v: string) => JSON.parse(v) };
   const created = postgres(connectionString, {
     ssl: "require", // TLS is mandatory whatever the URL says
     max: Number(process.env["DATABASE_POOL_MAX"] ?? 10),
@@ -75,7 +81,7 @@ function client(connectionString: string): postgres.Sql {
     connect_timeout: 15,
     prepare: false, // safe behind PgBouncer / Neon's pooler
     onnotice: () => {},
-    types,
+    types: types as never,
   });
   pool = { url: connectionString, client: created };
   return created;
@@ -99,7 +105,34 @@ export async function runQuery(query: string, params: unknown[] = []): Promise<G
   return result;
 }
 
-/** One request is one PostgreSQL transaction, never an interactive callback. */
+/**
+ * PostgreSQL's "unknown" type. A parameter sent as unknown is typed by the server
+ * exactly like one sent without a type (oid 0), but the driver no longer has to
+ * ask the server for the parameter types first, which costs a round trip.
+ */
+export const UNKNOWN_PARAM_OID = 705;
+
+/**
+ * Scalars travel as untyped text and the server infers their type; JSON text
+ * reaches json(b) columns as the JSON it is. Booleans, bytes, bigints and arrays
+ * keep the driver's own typing (arrays still need the server's description).
+ */
+export function bindParam(db: Pick<postgres.Sql, "typed">, value: unknown): unknown {
+  if (value === null || typeof value === "string") return db.typed(value as never, UNKNOWN_PARAM_OID);
+  if (typeof value === "number") return db.typed(String(value) as never, UNKNOWN_PARAM_OID);
+  return value;
+}
+
+/**
+ * One request is one PostgreSQL transaction, never an interactive callback.
+ *
+ * The role switch, the RLS context, the role guard and the statements go out as
+ * one pipelined batch with a single Sync: PostgreSQL runs them as one implicit
+ * transaction, so a failing statement (the guard included) stops every later one
+ * and nothing commits. That is one network round trip instead of one per statement
+ * plus BEGIN and COMMIT. Serializable batches keep an explicit BEGIN/COMMIT around
+ * the same pipelined batch, so a serialization failure surfaces on COMMIT.
+ */
 export async function runBatch(
   input: Statement[],
   opts: { withContext?: boolean; isolation?: "Serializable" } = {},
@@ -121,15 +154,16 @@ export async function runBatch(
   try {
     // The atomic role/context/guard prefix runs first; an owner URL never queries as the owner.
     const db = client(connectionString);
-    const work = async (tx: postgres.TransactionSql) => {
-      const out: GatewayResult[] = [];
-      for (const s of queries) {
-        const r = await tx.unsafe(s.query, s.params as never[]);
-        out.push({ rows: [...r] as Row[], rowCount: r.count ?? null, command: String(r.command ?? "") });
-      }
-      return out;
+    const pipelined = async (conn: postgres.Sql | postgres.TransactionSql) => {
+      // simple: false keeps every statement on the extended protocol: a simple-protocol
+      // query would end the implicit transaction in the middle of the batch.
+      const parts = queries.map((s) => conn.unsafe(s.query, s.params.map((v) => bindParam(conn, v)) as never[], { simple: false }));
+      const settled = (await conn.batch(parts)) as unknown as postgres.RowList<Row[]>[];
+      return settled.map((r) => ({ rows: [...r] as Row[], rowCount: r.count ?? null, command: String(r.command ?? "") }));
     };
-    const results = opts.isolation ? await db.begin("isolation level serializable", work) : await db.begin(work);
+    const results = opts.isolation
+      ? await db.begin("isolation level serializable", (tx) => pipelined(tx))
+      : await pipelined(db);
     json = { results: results as GatewayResult[] };
   } catch (cause) {
     const code = (cause as { code?: unknown })?.code;

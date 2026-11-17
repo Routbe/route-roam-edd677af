@@ -39,6 +39,26 @@ function rowMeta(row: Row): DraftMeta {
   };
 }
 
+/** The draft read on its own, so callers can send it in a batch with other reads. */
+export function profileDraftQuery(userId: string, space: ProfileSpace) {
+  return sql`
+    select payload, revision, published_revision, updated_at, published_at
+      from public.profile_drafts
+     where user_id = ${userId} and space = ${space}
+     limit 1
+  `;
+}
+
+export function draftFromRow(
+  row: Row,
+  livePayload: ProfileDraftPayload,
+): { payload: SerializableDraftPayload; meta: DraftMeta } {
+  return {
+    payload: (row["payload"] as SerializableDraftPayload | null) ?? (livePayload as SerializableDraftPayload),
+    meta: rowMeta(row),
+  };
+}
+
 export async function readOrCreateProfileDraft(
   userId: string,
   space: ProfileSpace,
@@ -49,18 +69,10 @@ export async function readOrCreateProfileDraft(
     values (${userId}, ${space}, ${JSON.stringify(livePayload)}::jsonb, 1, 1, now())
     on conflict (user_id, space) do nothing
   `;
-  const rows = (await sql`
-    select payload, revision, published_revision, updated_at, published_at
-      from public.profile_drafts
-     where user_id = ${userId} and space = ${space}
-     limit 1
-  `) as Row[];
+  const rows = (await profileDraftQuery(userId, space)) as Row[];
   const row = rows[0];
   if (!row) throw new Error("draft_not_found");
-  return {
-    payload: (row["payload"] as SerializableDraftPayload | null) ?? (livePayload as SerializableDraftPayload),
-    meta: rowMeta(row),
-  };
+  return draftFromRow(row, livePayload);
 }
 
 /** A standalone QR save publishes only the QR and patches the private draft.

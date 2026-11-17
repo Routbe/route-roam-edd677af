@@ -46,10 +46,12 @@ export type StudioProfileDTO = {
 export const getStudioProfile = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .handler(async ({ context }) => {
-    const { readStudioProfile } = await import("./studio-profile.server");
-    const live = await readStudioProfile(context.userId);
-    if (!live) return null;
-    const { readOrCreateProfileDraft } = await import("./profile-drafts.server");
+    const { readStudioOpening } = await import("./studio-profile.server");
+    // Profile, alias, identity mark and draft arrive in one database round trip.
+    const opened = await readStudioOpening(context.userId, "verified");
+    if (!opened) return null;
+    const live = opened.live;
+    const { readOrCreateProfileDraft, draftFromRow } = await import("./profile-drafts.server");
     const livePayload: SaveStudioProfileInput = {
       username: live.username ?? "",
       displayName: live.displayName,
@@ -61,7 +63,10 @@ export const getStudioProfile = createServerFn({ method: "GET" })
       blocks: live.blocks as Json[],
       displayPrefs: live.displayPrefs as Record<string, Json>,
     };
-    const draft = await readOrCreateProfileDraft(context.userId, "verified", livePayload);
+    // Only a member's very first opening creates the draft (two more round trips).
+    const draft = opened.draft
+      ? draftFromRow(opened.draft, livePayload)
+      : await readOrCreateProfileDraft(context.userId, "verified", livePayload);
     return { ...live, ...draft.payload, ...draft.meta } as StudioProfileDTO;
   });
 
