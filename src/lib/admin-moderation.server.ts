@@ -214,7 +214,7 @@ export async function listUsersPage(opts: {
     );
   };
 
-  // A1: moderation reason and payment method come back sealed once db-pending/0287 is live.
+  // A1: moderation reason and payment method come back sealed once db/0287 is live.
   const A1_FIELDS = ["moderation_reason", "payment_method"] as const;
   const { data: rawData, count } = await selectTolerant<ProfileRow[]>(
     PROFILE_COLUMNS + (await sealedSelectList(A1_FIELDS)),
@@ -264,7 +264,7 @@ export async function setSuspension(opts: {
     .update({
       is_suspended: opts.suspended,
       status: opts.suspended ? "suspended" : "active",
-      // A1: reason and moderator are sealed (plaintext NULL) once db-pending/0287 is live.
+      // A1: reason and moderator are sealed (plaintext NULL) once db/0287 is live.
       ...(await profileFieldPatch(opts.userId, { moderation_reason: opts.suspended ? (opts.reason ?? null) : null, moderated_by: opts.adminId })),
       moderated_at: new Date().toISOString(),
     })

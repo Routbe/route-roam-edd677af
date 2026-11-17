@@ -206,7 +206,7 @@ export async function approveBusinessRequest(requestId: string, adminId: string)
            verified_at = coalesce(verified_at, now())
      where id = ${userId}
   `;
-  // A1: the VAT number is stored sealed (plaintext NULL) once db-pending/0287 is live.
+  // A1: the VAT number is stored sealed (plaintext NULL) once db/0287 is live.
   const { writeProfilePrivateFields } = await import("./profile-private/sealed-profile.server");
   await writeProfilePrivateFields(userId, { business_vat: (request["vat_number"] as string | null) ?? null });
   await sql`

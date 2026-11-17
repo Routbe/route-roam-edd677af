@@ -2,7 +2,7 @@
  * A1 key ring for sealed profile fields.
  *
  * Each key version is a random 32-byte field master key (the input to field-seal.ts). It is
- * stored in vault_enclave.profile_field_keys (db-pending/0287) ONLY wrapped with AES-256-GCM
+ * stored in vault_enclave.profile_field_keys (db/0287) ONLY wrapped with AES-256-GCM
  * under a key derived from ROUT_VAULT_KEK, which lives in the server environment and never in
  * the database. A database dump alone opens no field and the environment alone holds no data.
  *

@@ -79,7 +79,7 @@ export const adminGrantVerification = createServerFn({ method: "POST" })
     return grantVerification({ ...data, adminId: context.userId });
   });
 
-/** A1: payment method per member, opened on the server (sealed once db-pending/0287 is live). */
+/** A1: payment method per member, opened on the server (sealed once db/0287 is live). */
 export const adminMemberPaymentMethods = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((d: unknown) => z.object({ ids: z.array(z.string().uuid()).max(500) }).parse(d))

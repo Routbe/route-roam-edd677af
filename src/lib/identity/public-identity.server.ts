@@ -9,7 +9,7 @@ const NONE: PublicIdentity = { diditVerified: false, realHuman: false };
  * Public identity result per member id, read through db/0282 (rout_public_identity_badges).
  * diditVerified is the blue "KYC Attested" shield: only a KYC attestation sets it; profiles.verified
  * and is_paid are ignored. realHuman is the green "Real Human" shield and comes EXCLUSIVELY from a
- * zero-knowledge proof (db-pending/0288, evidence = 'zk_proof'); before 0288 is live the db/0282
+ * zero-knowledge proof (db/0288, evidence = 'zk_proof'); before 0288 is live the db/0282
  * answer mixes in KYC and W Identity, so it is ignored and realHuman stays false.
  * Fails closed: an unreachable database or an older schema gives no mark.
  */

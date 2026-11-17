@@ -1,5 +1,5 @@
 /**
- * A1 column mapping: plaintext profile values <-> the sealed columns of db-pending/0287.
+ * A1 column mapping: plaintext profile values <-> the sealed columns of db/0287.
  *
  * For every private field `f` the database holds `f_sealed` (RPF1 ciphertext, field-seal.ts) and,
  * for indexed fields, `f_bidx` (HMAC-BLAKE3 blind index). A write always sets the plaintext column

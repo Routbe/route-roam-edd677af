@@ -29,7 +29,7 @@ export async function bestPriceCents(
     // New members who came in through an invite get 10% off (inviter rewards above still apply to inviters).
     const { inviteePriceCents } = await import("./referral-rewards");
     const { sql } = await import("./neon");
-    // A1: from db-pending/0287 on, referred_by is answered by an owner-only definer (the CONTRACT withholds the column).
+    // A1: from db/0287 on, referred_by is answered by an owner-only definer (the CONTRACT withholds the column).
     const { profileSealingLive } = await import("./profile-private/sealed-profile.server");
     const { withDbContext } = await import("./neon");
     const referred = (await profileSealingLive())

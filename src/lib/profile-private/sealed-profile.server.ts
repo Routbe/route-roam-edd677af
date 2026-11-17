@@ -1,7 +1,7 @@
 /**
  * A1 facade for every module that writes or reads a private profile field.
  *
- * Before db-pending/0287 is live these helpers behave exactly like the legacy plaintext columns,
+ * Before db/0287 is live these helpers behave exactly like the legacy plaintext columns,
  * so the code can be deployed before the migration (deploy order free). Once it is live:
  * writes carry only ciphertext and blind indexes, reads decrypt in this process, and lookups
  * compare blind indexes. Plaintext never goes back into Neon.

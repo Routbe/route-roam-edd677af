@@ -237,7 +237,7 @@ export async function applyStripeEvent(event: StripeEvent): Promise<string> {
     const payoutsEnabled = object?.["payouts_enabled"] === true;
     const status = chargesEnabled && payoutsEnabled ? "active" : "pending";
     const { sql } = await import("./neon");
-    // A1: once db-pending/0287 is live the account id exists only sealed; match its blind index
+    // A1: once db/0287 is live the account id exists only sealed; match its blind index
     // (every key version) and, until the backfill finished, the legacy plaintext column too.
     const { profileLookupHex } = await import("./profile-private/sealed-profile.server");
     const idx = await profileLookupHex("stripe_account_id", accountId);

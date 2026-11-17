@@ -274,7 +274,7 @@ export function ProfileView({
     ? (profile.subdomain_alias as string)
     : null;
   // Groen "Real Human"-schild: uitsluitend na een zero-knowledge-bewijs (real_human_verified,
-  // db-pending/0288). Een KYC-attestatie, betaling of Pro geeft het nooit.
+  // db/0288). Een KYC-attestatie, betaling of Pro geeft het nooit.
   const zkHuman = profile.real_human_verified === true;
   const kycAttested = profile.legal_identity_verified === true;
   const showBadge = free
