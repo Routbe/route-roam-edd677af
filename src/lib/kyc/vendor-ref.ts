@@ -1,7 +1,7 @@
 /**
  * Opaque Didit vendor_data: "rk1." + base64url(nonce 24 | XChaCha20-Poly1305(member id 16 | state 24)).
  * Didit never learns the ROUT member id, and a webhook can name the member only with a reference
- * this server sealed. The key is HKDF-SHA256(IDENTITY_HASH_PEPPER, info "rout.kyc.vendor.v1");
+ * this server sealed. The key is HKDF-SHA256(pepper (IDENTITY_HASH_PEPPER or PEPPER_SECRET), info "rout.kyc.vendor.v1");
  * the AAD binds the version. The state is still checked single-use against
  * identity_verification_sessions inside the member's own RLS context.
  */
