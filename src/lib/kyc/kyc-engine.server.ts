@@ -58,13 +58,18 @@ export async function startDiditKyc(userId: string, originInput: string | null):
   return inMemberContext(userId, async () => {
     if (verificationDecision(await id.getIdentityStatus(userId), "didit") === "reject") return { ok: false, reason: "already_verified" };
     if (!diditAvailable(await id.diditSuccessCount())) return { ok: false, reason: "limit_reached" };
+    // One open Didit session per member, so the status endpoint can see a decline; a hosted Didit
+    // flow can take longer than the generic 30-minute session window.
+    const { sql } = await import("@/lib/neon");
+    await sql`delete from public.identity_verification_sessions where user_id = ${userId} and provider = 'didit'`;
     const state = await id.createSession(userId, "didit", null);
+    await sql`update public.identity_verification_sessions set expires_at = now() + interval '24 hours'
+      where state = ${state} and provider = 'didit'`;
     const { createDiditSession, DiditError } = await import("./didit-client.server");
     try {
       const s = await createDiditSession({ vendorData: sealVendorRef(userId, state, pepper()), callback: `${origin}/settings?identity=pending` });
       return { ok: true, session_url: s.url, session_token: s.sessionToken };
     } catch (e) {
-      const { sql } = await import("@/lib/neon");
       await sql`delete from public.identity_verification_sessions where state = ${state}`.catch(() => undefined);
       if (e instanceof DiditError && e.code === "not_configured") return { ok: false, reason: "not_configured" };
       return { ok: false, reason: "provider_error" };
@@ -101,39 +106,59 @@ export async function attestDidit(input: {
   const { DIDIT_MONTHLY_LIMIT } = await import("@/lib/identity/identity-rules");
   const { hasSchemaFeature } = await import("@/lib/schema-features.server");
 
-  const session = await id.consumeSession(input.state, "didit");
-  if (!session || session.user_id !== input.userId) {
+  // Every step below is idempotent, and the session row is consumed only at the very end: a
+  // transient failure answers 503, Didit redelivers, and the retry finds the session again.
+  const open = (await sql`select user_id from public.identity_verification_sessions
+      where state = ${input.state} and provider = 'didit' and expires_at > now() limit 1`) as { user_id: string }[];
+  if (open[0]?.user_id !== input.userId) {
     const s = await id.getIdentityStatus(input.userId);
     return s.tier2LegalIdentity ? "already_verified" : "session_unknown";
   }
   const { verificationDecision } = await import("@/lib/identity/identity-tiers");
-  if (verificationDecision(await id.getIdentityStatus(input.userId), "didit") === "reject") return "already_verified";
+  if (verificationDecision(await id.getIdentityStatus(input.userId), "didit") === "reject") {
+    await id.consumeSession(input.state, "didit");
+    return "already_verified";
+  }
 
   const [bumped] = (await sql`select public.rout_didit_usage_bump(${DIDIT_MONTHLY_LIMIT}::int) as ok`) as { ok: boolean }[];
-  if (bumped?.ok !== true) return "limit_reached";
+  if (bumped?.ok !== true) {
+    await id.consumeSession(input.state, "didit");
+    return "limit_reached";
+  }
   const release = () => sql`select public.rout_didit_usage_release()`.catch(() => undefined);
 
-  if (await hasSchemaFeature("0288")) {
-    const [r] = (await sql`select public.rout_kyc_attest('didit', ${[...input.nullifiers]}::text[], ${[...input.kinds]}::text[],
-        ${input.isRealHuman}, true, ${input.jurisdiction}) as code`) as { code: string }[];
-    if (r?.code !== "ok") {
-      await release();
-      if (r?.code === "identity_already_attested_across_providers" || r?.code === "duplicate_human") return r.code;
-      throw new Error(`kyc_attest_${r?.code ?? "failed"}`);
-    }
-  }
   try {
-    await sql`insert into public.identity_verifications
-        (user_id, is_verified, verified_real_name, verification_provider, unique_human_id, verified_at, updated_at)
-      values (${input.userId}, true, null, 'didit', ${input.nullifiers[0]!}, now(), now())
-      on conflict (user_id) do update set is_verified = true, verified_real_name = null,
-        verification_provider = 'didit', unique_human_id = excluded.unique_human_id, verified_at = now(), updated_at = now()
-      where identity_verifications.is_verified = false`;
+    if (await hasSchemaFeature("0288")) {
+      const [r] = (await sql`select public.rout_kyc_attest('didit', ${[...input.nullifiers]}::text[], ${[...input.kinds]}::text[],
+          ${input.isRealHuman}, true, ${input.jurisdiction}) as code`) as { code: string }[];
+      if (r?.code === "identity_already_attested_across_providers" || r?.code === "duplicate_human") {
+        await release();
+        await id.consumeSession(input.state, "didit");
+        return r.code;
+      }
+      if (r?.code !== "ok") throw new Error(`kyc_attest_${r?.code ?? "failed"}`);
+    }
+    try {
+      await sql`insert into public.identity_verifications
+          (user_id, is_verified, verified_real_name, verification_provider, unique_human_id, verified_at, updated_at)
+        values (${input.userId}, true, null, 'didit', ${input.nullifiers[0]!}, now(), now())
+        on conflict (user_id) do update set is_verified = true, verified_real_name = null,
+          verification_provider = 'didit', unique_human_id = excluded.unique_human_id, verified_at = now(), updated_at = now()
+        where identity_verifications.is_verified = false`;
+    } catch (error) {
+      const code = (error as { code?: unknown })?.code;
+      if (code === "23505") {
+        await release();
+        await id.consumeSession(input.state, "didit");
+        return "duplicate_human";
+      }
+      throw error;
+    }
   } catch (error) {
     await release();
-    if (/duplicate|unique/i.test(String((error as Error)?.message))) return "duplicate_human";
     throw error;
   }
+  await id.consumeSession(input.state, "didit");
   return "verified";
 }
 
