@@ -351,7 +351,15 @@
 - [x] Didit v3 engine: session, signed webhook, status endpoint, verification modal; no names or numbers stored
 - [x] db-pending/0288 (cross-provider nullifier table + rout_kyc_attest) written and tested offline
 - [ ] Apply 0288 on Neon — waits for the owner's literal GO
-- [ ] Set DIDIT_API_KEY, DIDIT_WEBHOOK_SECRET, DIDIT_WORKFLOW_ID, IDENTITY_HASH_PEPPER on the owner's host and register the webhook URL at Didit — owner
+- [ ] Set DIDIT_API_KEY, DIDIT_WEBHOOK_SECRET, DIDIT_WORKFLOW_ID, IDENTITY_HASH_PEPPER or PEPPER_SECRET on the owner's host and register the webhook URL at Didit — owner
 - [ ] Other providers in the hub (itsme, DigiD, eID, France Identité, MitID, CIE, IDnow, Shufti Pro, Trulioo, World ID) — each needs a contract and keys from the owner
-- [ ] Green "Real Human" badge only from zero-knowledge proofs — owner decision (today also W Identity/Didit/manual)
+- [x] Green "Real Human" shield only from zero-knowledge proofs; blue "KYC Attested" shield for Didit/eIDAS (owner decision 2026-11-17 13:45)
 - [ ] Workspace IBAN for Didit-only owners: name match no longer possible without a stored name — owner decision (domain path works)
+
+## Owner directive 2026-11-17 13:45 UTC — 0287 + 0288 rollout, badge split, zeroization
+- [x] 0287 + 0288 prepared on an offline replay; checksums pinned in db-pending/ROLLOUT-0287-0288.md; Neon history verified read-only (0 deviations)
+- [ ] Apply 0287 then 0288 on Neon — waits for the owner's literal GO per file
+- [x] Blue "KYC Attested" shield, green "Real Human" only from zero-knowledge proofs, supporter crown separate
+- [x] Webhook/decision bytes and anchors in Node.js Buffers, fill(0) right after the nullifier; PEPPER_SECRET accepted
+- [ ] Zero-knowledge humanity verifier that writes `zk_proof` rows — needs a chosen proof system/provider (owner)
+- [x] Full test suite green, including the load-sensitive tests

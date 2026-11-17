@@ -273,10 +273,15 @@ export function ProfileView({
   const claimedDomain = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(profile.subdomain_alias ?? "")
     ? (profile.subdomain_alias as string)
     : null;
+  // Groen "Real Human"-schild: uitsluitend na een zero-knowledge-bewijs (real_human_verified,
+  // db-pending/0288). Een KYC-attestatie, betaling of Pro geeft het nooit.
+  const zkHuman = profile.real_human_verified === true;
+  const kycAttested = profile.legal_identity_verified === true;
   const showBadge = free
     ? Boolean(profile.human_linked) && prefs.humanBadgeVisible
-    : // Blauw vinkje: uitsluitend na een voltooide Didit-check (db/0282). Betaling of Pro geeft het nooit.
-      profile.legal_identity_verified === true && prefs.badgeVisible && prefs.badgeType !== "none";
+    : // Blauw "KYC Attested"-schild: uitsluitend na een KYC-attestatie (Didit/eIDAS). Het groene
+      // schild op de rootpagina vraagt een eigen zero-knowledge-bewijs.
+      prefs.badgeVisible && prefs.badgeType !== "none" && (kycAttested || (zkHuman && prefs.badgeType === "human" && !profile.is_business && !profile.is_influencer));
   // Supporter/Pro: aparte, discrete kroon — los van identiteit, alleen op de rootpagina.
   const showSupporter = !free && !publicPath?.startsWith("/w/") && showsSupporterCrown({ isPro: profile.is_pro === true, supporterBadgeVisible: prefs.supporterBadgeVisible });
   /**
@@ -296,7 +301,9 @@ export function ProfileView({
           ? "verified"
           : prefs.badgeType === "domain" && !claimedDomain
             ? "verified"
-            : prefs.badgeType;
+            : prefs.badgeType === "human" && !zkHuman
+              ? "verified"
+              : prefs.badgeType;
   const hasPro = profile.is_pro ?? Boolean(profile.verified);
   const showWatermark =
     shouldShowWatermark(hasPro, prefs) &&

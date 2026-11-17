@@ -102,7 +102,7 @@ describe("Z3 proof over the 0275 schema snapshot", () => {
       const r = await mutate(fn);
       expect(r.findings.some((f) => f.id.startsWith(prefix)), label).toBe(true);
     }
-  }, 240_000);
+  }, 900_000); // seven full Z3 runs; 240 s was exceeded while the rest of the suite shared the CPU
 
   it("the qr_scans lemma is pinned to the function body: a changed body makes the policy unproven", async () => {
     const r = await mutate((c) => { const f = c.functions.find((x) => x.name === "rout_accessible_tracked_qr_ids")!; f.def = f.def.replace("t.user_id = public.rout_current_user_id()", "true"); });

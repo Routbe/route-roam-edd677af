@@ -66,3 +66,19 @@ describe("canonical ICAO / eIDAS anchors", () => {
     for (const x of a) expect([...x.bytes].every((b) => b === 0)).toBe(true);
   });
 });
+
+describe("anchor memory", () => {
+  it("returns unpooled Node.js Buffers that fill(0) wipes completely", async () => {
+    const { Buffer } = await import("node:buffer");
+    const a = canonicalAnchors({ issuingState: "BEL", documentType: "Identity Card", documentNumber: "592123456789", personalNumber: "85073003328" });
+    expect(a).toHaveLength(2);
+    for (const x of a) {
+      expect(Buffer.isBuffer(x.bytes)).toBe(true);
+      // Own ArrayBuffer, not a slice of Node's shared allocation pool.
+      expect(x.bytes.byteOffset).toBe(0);
+      expect(x.bytes.buffer.byteLength).toBe(x.bytes.length);
+    }
+    wipeAnchors(a);
+    for (const x of a) expect(x.bytes.every((b) => b === 0)).toBe(true);
+  });
+});

@@ -12,13 +12,19 @@
  * Stored: the nullifier (identity_verifications.unique_human_id, and with db-pending/0288 one row
  * per anchor in verified_identity_nullifiers), provider, is_real_human, jurisdiction. Never stored
  * or logged: names, document or personal numbers, dates, images, the decision body.
- * JavaScript strings parsed from the provider response cannot be overwritten; they are dropped
- * right after reading and only the derived byte buffers are zero-filled.
+ * Raw webhook bytes, decision bytes, canonical anchors and the pepper copy are Node.js Buffers
+ * (secure-buffer.ts) and are zero-filled with fill(0) right after use; the anchors immediately
+ * after the nullifiers are computed. JavaScript strings parsed from the provider response cannot be
+ * overwritten; they are dropped right after reading.
+ * Pepper: IDENTITY_HASH_PEPPER or PEPPER_SECRET (pepper.server.ts).
  */
+import { Buffer } from "node:buffer";
 import { canonicalAnchors, wipeAnchors, type CanonicalAnchor } from "./canonical-id";
 import { readDiditDecision, type KycState } from "./didit-decision";
 import { verifyDiditSignature } from "./didit-signature";
 import { universalNullifier } from "./nullifier";
+import { identityPepper, readPepper } from "./pepper.server";
+import { isWiped, wipe } from "./secure-buffer";
 import { openVendorRef, sealVendorRef } from "./vendor-ref";
 
 export type StartResult =
@@ -37,11 +43,7 @@ export type AttestResult =
 const MAX_BODY = 256 * 1024;
 const PENDING_REVIEW_HOURS = 72;
 
-function pepper(): string {
-  const p = process.env["IDENTITY_HASH_PEPPER"];
-  if (!p || p.length < 32) throw new Error("kyc_not_configured");
-  return p;
-}
+const pepper = () => identityPepper();
 
 async function inMemberContext<T>(userId: string, fn: () => Promise<T>): Promise<T> {
   const { withDbContext } = await import("@/lib/neon");
@@ -50,7 +52,7 @@ async function inMemberContext<T>(userId: string, fn: () => Promise<T>): Promise
 
 export async function startDiditKyc(userId: string, originInput: string | null): Promise<StartResult> {
   const id = await import("@/lib/identity/identity.server");
-  if (!id.providerConfigured("didit") || (process.env["IDENTITY_HASH_PEPPER"] ?? "").length < 32) return { ok: false, reason: "not_configured" };
+  if (!id.providerConfigured("didit") || !readPepper().ok) return { ok: false, reason: "not_configured" };
   const { verificationDecision } = await import("@/lib/identity/identity-tiers");
   const { diditAvailable } = await import("@/lib/identity/identity-rules");
   const { trustedOrigin } = await import("@/lib/safe-redirect");
@@ -77,15 +79,21 @@ export async function startDiditKyc(userId: string, originInput: string | null):
   });
 }
 
+/**
+ * realHuman mirrors the green "Real Human" shield (zero-knowledge proofs only, never KYC); the KYC
+ * result itself is legalIdentity, the blue "KYC Attested" shield.
+ */
 export async function kycStatus(userId: string): Promise<{ state: KycState; realHuman: boolean; legalIdentity: boolean }> {
   const id = await import("@/lib/identity/identity.server");
+  const { readPublicIdentity } = await import("@/lib/identity/public-identity.server");
+  const realHuman = (await readPublicIdentity(userId).catch(() => ({ realHuman: false }))).realHuman;
   return inMemberContext(userId, async () => {
     const s = await id.getIdentityStatus(userId);
-    if (s.tier2LegalIdentity) return { state: "verified", realHuman: s.tier1RealHuman, legalIdentity: true };
+    if (s.tier2LegalIdentity) return { state: "verified", realHuman, legalIdentity: true };
     const { sql } = await import("@/lib/neon");
     const rows = (await sql`select 1 as x from public.identity_verification_sessions
       where user_id = ${userId} and provider = 'didit' and expires_at > now() limit 1`.catch(() => [])) as unknown[];
-    return { state: rows.length ? "pending" : "none", realHuman: s.tier1RealHuman, legalIdentity: false };
+    return { state: rows.length ? "pending" : "none", realHuman, legalIdentity: false };
   });
 }
 
@@ -172,8 +180,12 @@ export async function handleDiditWebhook(request: Request): Promise<Response> {
   if (!secret) return json({ error: "not_configured" }, 503);
   const declared = Number(request.headers.get("content-length") ?? "0");
   if (declared > MAX_BODY) return json({ error: "too_large" }, 413);
-  const raw = new Uint8Array(await request.arrayBuffer());
-  if (raw.length > MAX_BODY) return json({ error: "too_large" }, 413);
+  // Buffer.from(ArrayBuffer) shares the request's memory, so fill(0) below wipes the only copy.
+  const raw = Buffer.from(await request.arrayBuffer());
+  if (raw.length > MAX_BODY) {
+    raw.fill(0);
+    return json({ error: "too_large" }, 413);
+  }
   const check = verifyDiditSignature({
     raw,
     secret,
@@ -181,7 +193,10 @@ export async function handleDiditWebhook(request: Request): Promise<Response> {
     previousSignature: request.headers.get("x-signature-previous"),
     timestamp: request.headers.get("x-timestamp"),
   });
-  if (!check.ok) return json({ error: "unauthorized" }, 401);
+  if (!check.ok) {
+    raw.fill(0);
+    return json({ error: "unauthorized" }, 401);
+  }
 
   let event: Record<string, unknown>;
   try {
@@ -249,15 +264,20 @@ async function approve(member: { userId: string; state: string }, sessionId: str
     if (!anchors.length) return "no_document";
     const p = pepper();
     const nullifiers = anchors.map((a) => universalNullifier(a.bytes, p));
+    // Destroy the canonical identifiers the moment the nullifiers exist, before any database call.
+    const kinds = anchors.map((a) => a.kind);
+    for (const a of anchors) a.bytes.fill(0);
+    if (!anchors.every((a) => isWiped(a.bytes))) throw new Error("kyc_wipe_failed");
     return await attestDidit({
       userId: member.userId,
       state: member.state,
       nullifiers,
-      kinds: anchors.map((a) => a.kind),
+      kinds,
       isRealHuman: reading.isRealHuman,
       jurisdiction: reading.jurisdiction,
     });
   } finally {
     wipeAnchors(anchors);
+    wipe(...anchors.map((a) => a.bytes));
   }
 }

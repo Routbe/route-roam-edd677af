@@ -233,6 +233,8 @@ textarea[data-tour^="cc-"] {
   --shield-hardware: 240 12% 9%;
   --shield-hardware-foreground: 43 82% 62%;
   --identity-verified: #1d9bf0;
+  /* Green Real Human shield: zero-knowledge humanity proofs only. */
+  --identity-human: #16a34a;
   --sketch-ink: hsl(var(--foreground) / 0.45);
   --sketch-echo: hsl(var(--foreground) / 0.25);
 
@@ -364,6 +366,7 @@ textarea[data-tour^="cc-"] {
   --color-shield-hardware: hsl(var(--shield-hardware));
   --color-shield-hardware-foreground: hsl(var(--shield-hardware-foreground));
   --color-identity-verified: var(--identity-verified);
+  --color-identity-human: var(--identity-human);
   --color-primary-foreground: hsl(var(--primary-foreground));
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));

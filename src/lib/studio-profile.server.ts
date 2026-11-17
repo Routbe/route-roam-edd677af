@@ -353,7 +353,8 @@ async function readTrustMeta(profile: Row) {
     const { readPublicIdentity } = await import("./identity/public-identity.server");
     const pub = await readPublicIdentity(id);
     legal = pub.diditVerified;
-    human = pub.realHuman || legal;
+    // Green Real Human shield: zero-knowledge proof only; a KYC attestation never implies it.
+    human = pub.realHuman;
     const rows = (await sql`select p.early_believer_at from public.profiles p where p.id = ${id} limit 1`) as Row[];
     earlyAt = (rows[0]?.["early_believer_at"] as string | null) ?? null;
   } catch (error) {
