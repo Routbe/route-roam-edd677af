@@ -154,6 +154,7 @@ import { workspacePublicPath } from "@/lib/workspace-rules";
 import { EmailForwardingPanel } from "@/components/dashboard/EmailForwardingPanel";
 import { EmailAliasDomains } from "@/components/dashboard/EmailAliasDomains";
 import { withAuthTimeout, authFailureMessage } from "@/lib/auth-timeout";
+import { isWarmingUp } from "@/lib/auth/warmup-guard";
 import { oauthAvatarOf } from "@/lib/oauth-avatar";
 import { BlueskyWizard } from "@/components/dashboard/BlueskyWizard";
 import { SocialIdentityVerify } from "@/components/settings/SocialIdentityVerify";
@@ -240,6 +241,8 @@ export function ProfileEditor({ variant = "verified", pageMode = "profile", onPa
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
+  /** One automatic retry after the server answered warming_up (cold instance). */
+  const warmupRetried = useRef(false);
 
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
@@ -319,6 +322,7 @@ export function ProfileEditor({ variant = "verified", pageMode = "profile", onPa
   useEffect(() => {
     if (!user) return;
     let active = true;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
     setLoading(true);
     setLoadError(null);
     (async () => {
@@ -416,6 +420,7 @@ export function ProfileEditor({ variant = "verified", pageMode = "profile", onPa
         }
         setPrefs(loadedPrefs);
         setLoadError(null);
+        warmupRetried.current = false;
       } catch (error) {
         if (!active) return;
         console.error("[studio:profile-load:failed]", {
@@ -429,6 +434,10 @@ export function ProfileEditor({ variant = "verified", pageMode = "profile", onPa
         setLoadError(
           authFailureMessage(error, t("studio.editor.loadFailed")),
         );
+        if (isWarmingUp(error) && !warmupRetried.current) {
+          warmupRetried.current = true;
+          retryTimer = setTimeout(() => setLoadAttempt((n) => n + 1), 1_000);
+        }
       } finally {
         // Never leave the studio spinning: the loader stops on success and failure.
         if (active) setLoading(false);
@@ -436,6 +445,7 @@ export function ProfileEditor({ variant = "verified", pageMode = "profile", onPa
     })();
     return () => {
       active = false;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [user, loadProfileEditor, loadAttempt]);
 
