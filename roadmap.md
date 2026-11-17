@@ -368,7 +368,7 @@
 - [x] /verify herontworpen: "Geverifieerd profiel", zwarte knop, compacte zoekbalk + scrollbare chips, alleen Didit/W Identity als actieve kaarten, overige providers in "Toekomstige integraties"
 - [x] 0287 + 0288 live op Neon (17-11-2026 14:48 en 14:49 UTC) via migration-rollout.ts --apply
 - [x] Alleen-lezen gecontroleerd: 282 rijen, 0288 laatste, controlegetallen gelijk, geschiedenis- en definer-controle 0 afwijkingen, schema-snapshot gelijk aan Neon
-- [ ] Volgende taken (in volgorde): sessies 90 dagen + bevestigen met passkey; time-outcontrole Studio-profiel ("15 seconden"-melding)
+- [x] Sessies 90 dagen glijdend gedaan; passkey-bevestiging en Studio-time-out staan hieronder bij de open besluiten
 
 ## Opdracht eigenaar 2026-11-17 14:47 UTC — live 0288, logo's, sessies
 - [x] 0287 + 0288 live, CODE_SCHEMA_LEVEL 0288, tests volgen de vrijgegeven bestanden
