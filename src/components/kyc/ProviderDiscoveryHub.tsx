@@ -70,7 +70,7 @@ export function ProviderDiscoveryHub({
               type="button"
               aria-pressed={filter === f}
               onClick={() => setFilter(f)}
-              className="group inline-flex min-h-11 items-center border-0 bg-transparent p-0 shadow-none"
+              className="group inline-flex min-h-11 items-center !border-0 !bg-transparent !bg-none p-0 !shadow-none"
             >
               <span
                 className={cn(
